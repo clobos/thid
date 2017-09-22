@@ -1,0 +1,48 @@
+---
+title: "Theory of Infectious Disease"
+subtitle: Homework
+author: "Aaron A. King, Robert J. Woods"
+date: "Fall Term, 2017"
+output: html_document
+---
+
+\newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+\newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+\newcommand{\dd}[1]{\mathrm{d}{#1}}
+\newcommand{\pd}[2]{\frac{\partial{#1}}{\partial{#2}}}
+\newcommand{\deriv}[2]{\frac{\dd{#1}}{\dd{#2}}}
+\newcommand\E[1]{\expect{#1}}
+\newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+\newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+\newcommand\dlta[1]{{\Delta}{#1}}
+\newcommand\lik{\mathcal{L}}
+\newcommand\loglik{\ell}
+\newcommand\equals{{=\,}}
+\newcommand\R{\mathbb{R}}
+\newcommand\data[1]{#1^*}
+\newcommand\params{\, ; \,}
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Different forms of the SIR equations for a closed population.
+
+In class, we derived the SIR equations for a closed population---one without births, deaths, or migration---in terms of the *numbers* of hosts in each of the S, I, and R compartments.
+We had
+$$
+\begin{aligned}
+\deriv{X}{t} &= -\beta\,\frac{X\,Y}{N}\\
+\deriv{Y}{t} &= \phantom{-}\beta\,\frac{X\,Y}{N}-\gamma\,Y\\
+\deriv{Z}{t} &= \phantom{-}\gamma\,Y
+\end{aligned}
+$$
+where $X$, $Y$, and $Z$ are, respectively, the numbers in each of the S, I, and R compartments, and $N=X+Y+Z$ is the total population size.
+Recall that $\beta$ is called the *transmission rate* and $\gamma$, the recovery rate.
+
+a. Formally change variables to recast the equations in terms of $S=X/N$, $I=Y/N$, and $R=Z/N$.
+b. The above equations assume *frequency-dependent transmission*, i.e., $\lambda=\beta\,\frac{Y}{N}$.
+Write down the corresponding equations under the assumption of density-dependent transmission, and recast the equations, again, in terms of the fractional occupancy of each compartment.
+c. Compare the resulting equations with those you derived in part a.
+  Discuss.
