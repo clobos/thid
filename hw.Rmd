@@ -1,9 +1,10 @@
 ---
 title: "Theory of Infectious Disease"
-subtitle: Homework
 author: "Aaron A. King, Robert J. Woods"
 date: "Fall Term, 2017"
-output: html_document
+output:
+  pdf_document: default
+subtitle: Homework
 ---
 
 \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
@@ -39,10 +40,9 @@ $$
 \end{aligned}
 $$
 where $X$, $Y$, and $Z$ are, respectively, the numbers in each of the S, I, and R compartments, and $N=X+Y+Z$ is the total population size.
-Recall that $\beta$ is called the *transmission rate* and $\gamma$, the recovery rate.
+Recall that $\beta$ is called the *transmission rate* and $\gamma$, the *recovery rate*.
 
-a. Formally change variables to recast the equations in terms of $S=X/N$, $I=Y/N$, and $R=Z/N$.
-b. The above equations assume *frequency-dependent transmission*, i.e., $\lambda=\beta\,\frac{Y}{N}$.
+(a) Formally change variables to recast the equations in terms of $S=X/N$, $I=Y/N$, and $R=Z/N$.
+(a) The above equations assume *frequency-dependent transmission*, i.e., $\lambda=\beta\,{Y}/{N}$.
 Write down the corresponding equations under the assumption of density-dependent transmission, and recast the equations, again, in terms of the fractional occupancy of each compartment.
-c. Compare the resulting equations with those you derived in part a.
-  Discuss.
+(a) Compare the resulting equations with those you derived in part (a). Discuss.
