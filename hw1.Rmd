@@ -1,10 +1,10 @@
 ---
 title: "Theory of Infectious Disease"
+subtitle: Homework 1
 author: "Aaron A. King, Robert J. Woods"
-date: "Fall Term, 2017"
+date: "Due: 29 September 2017"
 output:
   pdf_document: default
-subtitle: Homework
 ---
 
 \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
