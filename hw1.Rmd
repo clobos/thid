@@ -46,3 +46,9 @@ Recall that $\beta$ is called the *transmission rate* and $\gamma$, the *recover
 (a) The above equations assume *frequency-dependent transmission*, i.e., $\lambda=\beta\,{Y}/{N}$.
 Write down the corresponding equations under the assumption of density-dependent transmission, and recast the equations, again, in terms of the fractional occupancy of each compartment.
 (a) Compare the resulting equations with those you derived in part (a). Discuss.
+
+### Functional form of the force of infection
+
+With respect to an infection you work on, describe verbally and/or mathematically the form of the force of infection.
+Explain your reasoning.
+In particular, you can make an argument for frequency- or density-dependent transmission, or something else.
