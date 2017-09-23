@@ -17,4 +17,6 @@
 	a. Reading: K&R 2.2--2.6.
 	a. Homework: [HW1](./hw1.pdf)
 
+##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)
+
 ----------------------------
