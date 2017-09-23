@@ -4,7 +4,7 @@
 #### Fall 2017
 #### Aaron A. King and Robert J. Woods, Instructors
 
-## [Homework Assignments](https://kingaa.github.io/thid/hw.pdf)
+## [Website](https://kingaa.github.io/thid/)
 
 ----------------------------
 
