@@ -16,6 +16,11 @@
 1. For 29 September:
 	a. Reading: K&R 2.2--2.6.
 	a. Homework: [HW1](./hw1.pdf)
+1. For 6 October:
+	a. Reading: K&R 2.7--3.1.
+1. For 13 October:
+	a. Reading: K&R 2.7--3.1, [ODE lesson](odes/ODEs_in_R.pdf).
+	a. Homework:TBA
 
 ##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)
 
