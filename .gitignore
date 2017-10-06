@@ -1,0 +1,7 @@
+cache
+figure
+*.aux
+*.bbl
+*.blg
+*.log
+*.out

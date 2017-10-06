@@ -4,7 +4,7 @@
 \usepackage[round]{natbib}
 \usepackage{paralist}
 \usepackage{longtable}
-\usepackage[colorlinks=true]{hyperref}  
+\usepackage[colorlinks=true]{hyperref}
 \hypersetup{pdftitle={ODEs in R}}
 \usepackage{amsmath}
 \usepackage{amsthm}
@@ -15,8 +15,8 @@
 \setlength{\evensidemargin}{0in}
 \setlength{\oddsidemargin}{0in}
 \setlength{\topmargin}{-0.35in}
-\setlength{\parskip}{0.1in}  
-\setlength{\parindent}{0.0in}  
+\setlength{\parskip}{0.1in}
+\setlength{\parindent}{0.0in}
 \setcounter{secnumdepth}{1}
 \setcounter{tocdepth}{2}
 
@@ -43,55 +43,39 @@
 with contributions from\\
 Ben Bolker, John Drake, Pej Rohani, and Dave Smith}
 
-\date{
-  \today\\
-  Licensed under the Creative Commons attribution-noncommercial license, \texttt{http://creativecommons.org/licenses/by-nc/3.0/}.
-  Please share and remix noncommercially, mentioning its origin \includegraphics[height=10pt]{figs/cc-by-nc}.
-}
+\date{\today\\
+\vspace{1em}
+Licensed under the Creative Commons attribution-noncommercial license, \texttt{http://creativecommons.org/licenses/by-nc/3.0/}.
+Please share and remix noncommercially, mentioning its origin. \parbox[bottom]{57pt}{\includegraphics[height=20pt]{cc-by-nc}}}
 
-<<set-opts,echo=F,results='hide'>>=
-## don't worry about executing the following: 
-## it is needed for the typesetting, which is done using 'knitr'
+<<set-opts,echo=F,purl=F,results='hide',cache=FALSE>>=
+library(knitr)
 opts_chunk$set(
-               progress=T,prompt=F,tidy=F,highlight=T,
-               warning=F,message=F,
-               results='hide',echo=T,dev='pdf',
-               size='small',
-               fig.path='figure/odes-',fig.lp="fig:",
-               fig.align='center',
-               fig.show='asis',
-               fig.height=5,fig.width=10,dpi=150,dev='png'
-               )
+    progress=TRUE,prompt=FALSE,tidy=FALSE,highlight=TRUE,
+    cache=TRUE,
+    warning=FALSE,message=FALSE,
+    results='hide',echo=T,dev='pdf',
+    size='small',
+    fig.path='figure/odes-',fig.lp="fig:",
+    fig.align='center',
+    fig.show='asis',
+    fig.height=5,fig.width=10,dpi=150,dev='png'
+)
 
-options(stringsAsFactors=FALSE,help_type="html")
-
-scinot <- function (x, digits = 2, type = c("expression","latex")) {
-  type <- match.arg(type)
-  x <- signif(x,digits=digits)
-  ch <- floor(log10(abs(x)))
-  mn <- x/10^ch
-  switch(type,
-         expression={
-           bquote(.(mn)%*%10^.(ch))
-         },
-         latex={
-           paste0("\\scinot{",mn,"}{",ch,"}")
-         }
-         )
-}
-
-@ 
+options(stringsAsFactors=FALSE)
+@
 
 \begin{document}
 
 \maketitle
+\thispagestyle{empty}
 
 \section{Introduction}
 
-Here we begin our study of computational techniques for studying epidemiological models. 
+Here we begin our study of computational techniques for studying epidemiological models.
 In this session we introduce the numerical solution (or integration) of nonlinear differential equations using the sophisticated solvers found in the package \pkg{deSolve}.
 Numerical integration is one of the most important tools we have for the analysis of epidemiological models.
- 
+
 \section{The SIR model}
 
 As we saw in the lecture, the classical SIR compartmental model divides a population of hosts into three classes: susceptible, infected, recovered.
@@ -128,23 +112,23 @@ To use the numerical differential equation solver package, we load the \pkg{deSo
 
 require(deSolve)
 
-@ 
+@
 [Here, you may get an error saying that the \pkg{deSolve} package is not installed.
   If you do, run the following command:
 <<eval=F>>=
 source("http://kinglab.eeb.lsa.umich.edu/ICTPWID/labs/R_Packages.R")
-@ 
+@
 This will install not only \pkg{deSolve} but a bunch of other useful packages.
 If you ever need to install a package, you can use the command
 <<eval=F>>=
 install.package(name.of.package)
-@ 
+@
 Be sure to use quotes when necessary.]
 The ODE solver we'll use is called \code{ode}.
 Let's have a look at the help page for this function.
 <<eval=F>>=
 ?ode
-@ 
+@
 \code{ode} needs to know the \emph{initial values} of the state variables (\code{y}), the \code{times} at which we want solutions, the right-hand side of the ODE \code{func}.
 The latter can optionally depend on some parameters (\code{parms}).
 
@@ -176,12 +160,12 @@ closed.sir.model <- function (t, x, params) {
   dIdt <- beta*S*I-gamma*I
   dRdt <- gamma*I
   ## combine results into a single vector
-  dxdt <- c(dSdt,dIdt,dRdt) 
+  dxdt <- c(dSdt,dIdt,dRdt)
   ## return result as a list!
-  list(dxdt)                              
+  list(dxdt)
 }
 
-@ 
+@
 Note that the order and type of the arguments and output of this function must exactly match \code{ode}'s expectations.
 Thus, for instance, the time variable \code{t} must be the first argument even if, as is the case here, nothing in the function depends on time.
 [When the RHS of the ODE are independent of time, we say the ODE are \emph{autonomous}.]
@@ -192,7 +176,7 @@ To do this, we'll need some values of the parameters.
 If we're thinking of a disease something like measles, and measuring time in years, we might use something like:
 <<set-closed-params>>=
 params <- c(beta=400,gamma=365/13)
-@ 
+@
 \begin{exercise}
   What is the infectious period of this disease?
   What is $R_0$ in this case?
@@ -203,7 +187,7 @@ i.e., the starting values of the state variables $S$, $I$, and $R$:
 <<set-times-ics>>=
 times <- seq(from=0,to=60/365,by=1/365/4) # returns a sequence
 xstart <- c(S=0.999,I=0.001,R=0.000)     # initial conditions
-@ 
+@
 
 Next, we compute a model trajectory with the \code{ode} command and store the result in a data-frame:
 <<solve-closed-sir>>=
@@ -215,11 +199,11 @@ out <- as.data.frame(
                          parms=params
                          )
                      )
-@ 
+@
 and plot the results in Figure~\ref{fig:closed-epi} using the commands:
 <<epi-curve-plot,eval=F>>=
 plot(I~time,data=out,type='l')
-@ 
+@
 
 \begin{figure}
   \begin{center}
@@ -227,7 +211,7 @@ plot(I~time,data=out,type='l')
 op <- par(mgp=c(2,1,0),mar=c(3,3,1,1))
 <<epi-curve-plot>>
 par(op)
-@   
+@
   \end{center}
   \caption{
     Trajectory of the SIR model of an epidemic in a closed population.
@@ -265,14 +249,14 @@ for (beta in betavals) {
                              times=times,
                              parms=params
                              )
-                         )    
+                         )
     title <- bquote(list(beta==.(beta),"IP"==.(365/gamma)~"da"))
     plot(I~time,data=out,type='l',main=title)
   }
 }
 par(op)      # restore old settings
 
-@ 
+@
 
 Simulation is a useful tool, but its power is limited.
 The next exercise demonstrates the importance of being able to analyze the equations as well.
@@ -294,17 +278,17 @@ The next exercise demonstrates the importance of being able to analyze the equat
 \begin{figure}
 <<finalsize,echo=F>>=
 ## don't worry about executing the following
-## it just generates the figure in the document, 
+## it just generates the figure in the document,
 ## which is all you need to do the exercise
 require(emdbook)
 finalsize <- function (R0) {1+lambertW(-R0*exp(-R0))/R0}
 curve(finalsize,from=1,to=5,xlab=expression(R[0]),
       ylab=expression(R(infinity)),bty='l')
-@   
+@
   \caption{The final size, $R(\infty)$, of an SIR epidemic depends only on $R_0$.}
   \label{fig:finalsize}
 \end{figure}
-  
+
 \begin{solution}
 Here's one code that will solve the exercise.
 Others are certainly possible.
@@ -325,12 +309,12 @@ for (k in seq_along(betavals)) {
                              times=times,
                              parms=params
                              )
-                         )    
+                         )
     finalsize[k] <- tail(out$R,1)       # the final value of R
 }
 plot(finalsize~R0vals,type='o')
 
-@ 
+@
 \end{solution}
 
 
@@ -361,7 +345,7 @@ open.sir.model <- function (t, x, params) {
   list(c(dSdt,dIdt,dRdt))
 }
 
-@ 
+@
 
 \clearpage
 We'll need to specify a birth/death rate in addition to the two parameters we specified before:
@@ -369,7 +353,7 @@ We'll need to specify a birth/death rate in addition to the two parameters we sp
 
 params <- c(mu=1/50,beta=400,gamma=365/13)
 
-@ 
+@
 We integrate the equations as before:
 <<solve-open-sir>>=
 
@@ -383,7 +367,7 @@ out <- as.data.frame(
                          )
                      )
 
-@ 
+@
 
 We can plot each of the state variables against time, and $I$ against $S$, as shown in Fig.~\ref{fig:open-epi}, using the commands:
 <<open-epi-plot,eval=F>>=
@@ -394,15 +378,15 @@ plot(S~time,data=out,type='l',log='y')
 plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=0.5)
-par(op)                               
+par(op)
 
-@ 
+@
 
 \begin{figure}
   \begin{center}
 <<fig.height=6,fig.width=6,echo=F>>=
 <<open-epi-plot>>
-@   
+@
   \end{center}
   \caption{
     Trajectory of the SIR model.
@@ -420,7 +404,7 @@ par(op)
 \end{exercise}
 
 \begin{exercise}
-  Under the assumptions of this model, the average host lifespan is $1/\mu$.  
+  Under the assumptions of this model, the average host lifespan is $1/\mu$.
   Explore how host lifespan affects the dynamics by integrating the differential equations for lifespans of 20 and 200 years.
 \end{exercise}
 
@@ -444,11 +428,11 @@ The following exercises make some first steps in this direction.
 
 \subsection*{SIR with seasonal transmission}
 
-The simple SIR model always predicts damped oscillations towards an equilibrium (or pathogen extinction if $R_0$ is too small). 
-This is at odds with the recurrent outbreaks seen in many real pathogens. 
-Sustained oscillations require some additional drivers in the model. 
-An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term. 
-We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$. 
+The simple SIR model always predicts damped oscillations towards an equilibrium (or pathogen extinction if $R_0$ is too small).
+This is at odds with the recurrent outbreaks seen in many real pathogens.
+Sustained oscillations require some additional drivers in the model.
+An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term.
+We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$.
 We can modify the code presented above to solve the equations for a seasonally forced epidemic.
 <<seas-sir,cache=T,fig.height=10>>=
 
@@ -482,9 +466,9 @@ plot(S~time,data=out,type='l',log='y')
 plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=0.5)
-par(op) 
+par(op)
 
-@ 
+@
 
 \begin{exercise}
   Explore the dynamics of the seasonally forced SIR model for increasing amplitude $\beta_1$.
@@ -502,7 +486,7 @@ rain$time <- with(rain,year+(month-1)/12)
 
 plot(rainfall~time,data=rain,type='l')
 
-@ 
+@
 
 Let's assume that transmission depends on rainfall according to
 \begin{equation*}
@@ -510,7 +494,7 @@ Let's assume that transmission depends on rainfall according to
 \end{equation*}
 Since the data are accumulated monthly rainfall figures but the ODE integrator will need to evaluate $R(t)$ at arbitrary times, we'll need some way of interpolating the rainfall data.
 \pkg{R} affords us numerous ways of doing this.
-The \pkg{R} functions \code{approxfun} and \code{splinefun} construct interpolating functions in different ways; 
+The \pkg{R} functions \code{approxfun} and \code{splinefun} construct interpolating functions in different ways;
 see the documentation on these functions.
 <<spline-force>>=
 
@@ -522,7 +506,7 @@ smoothed.rain$rainfall <- sapply(smoothed.rain$time,interpol)
 plot(rainfall~time,data=rain,col='black',cex=2,pch=16,log='')
 lines(rainfall~time,data=smoothed.rain,col='red')
 
-@ 
+@
 
 <<solve-rain-forced,cache=T,fig.height=10>>=
 
@@ -557,9 +541,9 @@ plot(S~time,data=out,type='l',log='y')
 plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=1)
-par(op) 
+par(op)
 
-@ 
+@
 
 More generally, any fitting method that has an associated \code{predict} method can be used.
 For example, we can use local polynomial regression, \code{loess}, to smooth the rainfall data.
@@ -574,7 +558,7 @@ smoothed.rain$rainfall <- expm1(predict(fit,newdata=smoothed.rain))
 plot(rainfall~time,data=rain,col='black',cex=2,pch=16,log='')
 lines(rainfall~time,data=smoothed.rain,col='red')
 
-@ 
+@
 
 
 \end{document}
@@ -586,10 +570,10 @@ lines(rainfall~time,data=smoothed.rain,col='red')
 \bibliography{biblios}
 
 
-Second lab: 
+Second lab:
 * linear regression on initial segment of flu data to estimate R0
 * exercise: try this for 4, 5, 6 points, look at both R0hat and se(R0)
 * least squares fit of closed epidemic model to data
 * one parameter at a time for fixed values of the others
 * again on log scale
-* 
+*

@@ -4,7 +4,7 @@
 #' \usepackage[round]{natbib}
 #' \usepackage{paralist}
 #' \usepackage{longtable}
-#' \usepackage[colorlinks=true]{hyperref}  
+#' \usepackage[colorlinks=true]{hyperref}
 #' \hypersetup{pdftitle={ODEs in R}}
 #' \usepackage{amsmath}
 #' \usepackage{amsthm}
@@ -15,8 +15,8 @@
 #' \setlength{\evensidemargin}{0in}
 #' \setlength{\oddsidemargin}{0in}
 #' \setlength{\topmargin}{-0.35in}
-#' \setlength{\parskip}{0.1in}  
-#' \setlength{\parindent}{0.0in}  
+#' \setlength{\parskip}{0.1in}
+#' \setlength{\parindent}{0.0in}
 #' \setcounter{secnumdepth}{1}
 #' \setcounter{tocdepth}{2}
 #' 
@@ -43,55 +43,23 @@
 #' with contributions from\\
 #' Ben Bolker, John Drake, Pej Rohani, and Dave Smith}
 #' 
-#' \date{
-#'   \today\\
-#'   Licensed under the Creative Commons attribution-noncommercial license, \texttt{http://creativecommons.org/licenses/by-nc/3.0/}.
-#'   Please share and remix noncommercially, mentioning its origin \includegraphics[height=10pt]{figs/cc-by-nc}.
-#' }
+#' \date{\today\\
+#' \vspace{1em}
+#' Licensed under the Creative Commons attribution-noncommercial license, \texttt{http://creativecommons.org/licenses/by-nc/3.0/}.
+#' Please share and remix noncommercially, mentioning its origin. \parbox[bottom]{57pt}{\includegraphics[height=20pt]{cc-by-nc}}}
 #' 
-## ----set-opts,echo=F,results='hide'--------------------------------------
-## don't worry about executing the following: 
-## it is needed for the typesetting, which is done using 'knitr'
-opts_chunk$set(
-               progress=T,prompt=F,tidy=F,highlight=T,
-               warning=F,message=F,
-               results='hide',echo=T,dev='pdf',
-               size='small',
-               fig.path='figure/odes-',fig.lp="fig:",
-               fig.align='center',
-               fig.show='asis',
-               fig.height=5,fig.width=10,dpi=150,dev='png'
-               )
-
-options(stringsAsFactors=FALSE,help_type="html")
-
-scinot <- function (x, digits = 2, type = c("expression","latex")) {
-  type <- match.arg(type)
-  x <- signif(x,digits=digits)
-  ch <- floor(log10(abs(x)))
-  mn <- x/10^ch
-  switch(type,
-         expression={
-           bquote(.(mn)%*%10^.(ch))
-         },
-         latex={
-           paste0("\\scinot{",mn,"}{",ch,"}")
-         }
-         )
-}
-
-
 #' 
 #' \begin{document}
 #' 
 #' \maketitle
+#' \thispagestyle{empty}
 #' 
 #' \section{Introduction}
 #' 
-#' Here we begin our study of computational techniques for studying epidemiological models. 
+#' Here we begin our study of computational techniques for studying epidemiological models.
 #' In this session we introduce the numerical solution (or integration) of nonlinear differential equations using the sophisticated solvers found in the package \pkg{deSolve}.
 #' Numerical integration is one of the most important tools we have for the analysis of epidemiological models.
-#'  
+#' 
 #' \section{The SIR model}
 #' 
 #' As we saw in the lecture, the classical SIR compartmental model divides a population of hosts into three classes: susceptible, infected, recovered.
@@ -176,9 +144,9 @@ closed.sir.model <- function (t, x, params) {
   dIdt <- beta*S*I-gamma*I
   dRdt <- gamma*I
   ## combine results into a single vector
-  dxdt <- c(dSdt,dIdt,dRdt) 
+  dxdt <- c(dSdt,dIdt,dRdt)
   ## return result as a list!
-  list(dxdt)                              
+  list(dxdt)
 }
 
 
@@ -265,7 +233,7 @@ for (beta in betavals) {
                              times=times,
                              parms=params
                              )
-                         )    
+                         )
     title <- bquote(list(beta==.(beta),"IP"==.(365/gamma)~"da"))
     plot(I~time,data=out,type='l',main=title)
   }
@@ -294,7 +262,7 @@ par(op)      # restore old settings
 #' \begin{figure}
 ## ----finalsize,echo=F----------------------------------------------------
 ## don't worry about executing the following
-## it just generates the figure in the document, 
+## it just generates the figure in the document,
 ## which is all you need to do the exercise
 require(emdbook)
 finalsize <- function (R0) {1+lambertW(-R0*exp(-R0))/R0}
@@ -304,7 +272,7 @@ curve(finalsize,from=1,to=5,xlab=expression(R[0]),
 #'   \caption{The final size, $R(\infty)$, of an SIR epidemic depends only on $R_0$.}
 #'   \label{fig:finalsize}
 #' \end{figure}
-#'   
+#' 
 #' \begin{solution}
 #' Here's one code that will solve the exercise.
 #' Others are certainly possible.
@@ -325,7 +293,7 @@ for (k in seq_along(betavals)) {
                              times=times,
                              parms=params
                              )
-                         )    
+                         )
     finalsize[k] <- tail(out$R,1)       # the final value of R
 }
 plot(finalsize~R0vals,type='o')
@@ -408,7 +376,7 @@ plot(S~time,data=out,type='l',log='y')
 plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=0.5)
-par(op)                               
+par(op)
 
 
 #'   \end{center}
@@ -428,7 +396,7 @@ par(op)
 #' \end{exercise}
 #' 
 #' \begin{exercise}
-#'   Under the assumptions of this model, the average host lifespan is $1/\mu$.  
+#'   Under the assumptions of this model, the average host lifespan is $1/\mu$.
 #'   Explore how host lifespan affects the dynamics by integrating the differential equations for lifespans of 20 and 200 years.
 #' \end{exercise}
 #' 
@@ -452,11 +420,11 @@ par(op)
 #' 
 #' \subsection*{SIR with seasonal transmission}
 #' 
-#' The simple SIR model always predicts damped oscillations towards an equilibrium (or pathogen extinction if $R_0$ is too small). 
-#' This is at odds with the recurrent outbreaks seen in many real pathogens. 
-#' Sustained oscillations require some additional drivers in the model. 
-#' An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term. 
-#' We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$. 
+#' The simple SIR model always predicts damped oscillations towards an equilibrium (or pathogen extinction if $R_0$ is too small).
+#' This is at odds with the recurrent outbreaks seen in many real pathogens.
+#' Sustained oscillations require some additional drivers in the model.
+#' An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term.
+#' We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$.
 #' We can modify the code presented above to solve the equations for a seasonally forced epidemic.
 ## ----seas-sir,cache=T,fig.height=10--------------------------------------
 
@@ -490,7 +458,7 @@ plot(S~time,data=out,type='l',log='y')
 plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=0.5)
-par(op) 
+par(op)
 
 
 #' 
@@ -518,7 +486,7 @@ plot(rainfall~time,data=rain,type='l')
 #' \end{equation*}
 #' Since the data are accumulated monthly rainfall figures but the ODE integrator will need to evaluate $R(t)$ at arbitrary times, we'll need some way of interpolating the rainfall data.
 #' \pkg{R} affords us numerous ways of doing this.
-#' The \pkg{R} functions \code{approxfun} and \code{splinefun} construct interpolating functions in different ways; 
+#' The \pkg{R} functions \code{approxfun} and \code{splinefun} construct interpolating functions in different ways;
 #' see the documentation on these functions.
 ## ----spline-force--------------------------------------------------------
 
@@ -565,7 +533,7 @@ plot(S~time,data=out,type='l',log='y')
 plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=1)
-par(op) 
+par(op)
 
 
 #' 
@@ -594,10 +562,10 @@ lines(rainfall~time,data=smoothed.rain,col='red')
 #' \bibliography{biblios}
 #' 
 #' 
-#' Second lab: 
+#' Second lab:
 #' * linear regression on initial segment of flu data to estimate R0
 #' * exercise: try this for 4, 5, 6 points, look at both R0hat and se(R0)
 #' * least squares fit of closed epidemic model to data
 #' * one parameter at a time for fixed values of the others
 #' * again on log scale
-#' * 
+#' *

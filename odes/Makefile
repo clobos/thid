@@ -1,3 +1,8 @@
+PDFLATEX = pdflatex
+BIBTEX = bibtex
+RM = rm -f
+CP = cp
+
 default: ODEs_in_R.pdf ODEs_in_R.R
 
 ifneq ($(INSTALLDIR),)
@@ -8,6 +13,12 @@ endif
 %.pdf: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
 	Rscript --vanilla -e "rmarkdown::render(\"$*.Rmd\",output_format=\"pdf_document\")"
+
+%.pdf: %.tex
+	$(PDFLATEX) $*
+	-$(BIBTEX) $*
+	$(PDFLATEX) $*
+	$(PDFLATEX) $*
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
@@ -23,11 +34,11 @@ endif
 %.R: %.Rnw
 	Rscript --vanilla -e "knitr::purl(\"$*.Rnw\",output=\"$*.R\",documentation=2)"
 
-%.pdf: %.Rnw
-	Rscript --vanilla -e "knitr::knit(\"$*.Rnw\",output=\"$*.pdf\")"
+%.tex: %.Rnw
+	Rscript --vanilla -e "knitr::knit(\"$*.Rnw\")"
 
 clean:
-	$(RM) *.o *.so *.log *.aux *.out *.nav *.snm *.toc *.bak
+	$(RM) *.o *.so *.log *.aux *.out *.nav *.snm *.toc *.bak *.bbl *.blg
 	$(RM) Rplots.ps Rplots.pdf
 
 fresh: clean
