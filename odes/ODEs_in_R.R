@@ -100,14 +100,9 @@ require(deSolve)
 #' [Here, you may get an error saying that the \pkg{deSolve} package is not installed.
 #'   If you do, run the following command:
 ## ----eval=F--------------------------------------------------------------
-## source("http://kinglab.eeb.lsa.umich.edu/ICTPWID/labs/R_Packages.R")
+## install.packages("deSolve")
 
-#' This will install not only \pkg{deSolve} but a bunch of other useful packages.
-#' If you ever need to install a package, you can use the command
-## ----eval=F--------------------------------------------------------------
-## install.package(name.of.package)
-
-#' Be sure to use quotes when necessary.]
+#' ]
 #' The ODE solver we'll use is called \code{ode}.
 #' Let's have a look at the help page for this function.
 ## ----eval=F--------------------------------------------------------------
