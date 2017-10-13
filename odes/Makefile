@@ -3,7 +3,7 @@ BIBTEX = bibtex
 RM = rm -f
 CP = cp
 
-default: ODEs_in_R.pdf ODEs_in_R.R
+default: ODEs_in_R.pdf ODEs_in_R.R Parameter_Estimation.pdf Parameter_Estimation.R
 
 ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)

@@ -467,12 +467,10 @@ par(op)
 #' When a covariate forces the equations, we must interpolate the covariate.
 #' To give an example, let's suppose that the transmission rate depends on rainfall, $R(t)$, and that we have data on rainfall (in mm/mo).
 ## ----dacca-rain,cache=T--------------------------------------------------
-
-rain <- read.csv("dacca_rainfall.csv")
+rain <- read.csv("https://kingaa.github.io/thid/data/dacca_rainfall.csv")
 rain$time <- with(rain,year+(month-1)/12)
 
 plot(rainfall~time,data=rain,type='l')
-
 
 #' 
 #' Let's assume that transmission depends on rainfall according to

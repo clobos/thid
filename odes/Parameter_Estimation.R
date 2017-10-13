@@ -1,0 +1,1016 @@
+#' \documentclass[pdftex,12pt,final,reqno]{article}
+#' \usepackage{times}
+#' \usepackage[utf8]{inputenc}
+#' \usepackage[round]{natbib}
+#' \usepackage{paralist}
+#' \usepackage{longtable}
+#' \usepackage[colorlinks=true]{hyperref}  
+#' \hypersetup{pdftitle={Parameter Estimation}}
+#' \usepackage{amsmath}
+#' \usepackage{amsthm}
+#' \usepackage{amsfonts}
+#' 
+#' \setlength{\textwidth}{6.25in}
+#' \setlength{\textheight}{8.75in}
+#' \setlength{\evensidemargin}{0in}
+#' \setlength{\oddsidemargin}{0in}
+#' \setlength{\topmargin}{-0.35in}
+#' \setlength{\parskip}{0.1in}  
+#' \setlength{\parindent}{0.0in}  
+#' \setcounter{secnumdepth}{1}
+#' \setcounter{tocdepth}{2}
+#' 
+#' \theoremstyle{definition}
+#' \newtheorem{exercise}{Exercise}
+#' \newtheorem{challenge}[exercise]{*Exercise}
+#' \theoremstyle{remark}
+#' \newtheorem*{solution}{Solution}
+#' 
+#' \newcommand{\code}[1]{\texttt{#1}}
+#' \newcommand{\pkg}[1]{\textsf{#1}}
+#' \newcommand{\Prob}[1]{\mathbb{P}\left[#1\right]}
+#' \newcommand{\expect}[1]{\mathbb{E}\left[#1\right]}
+#' \newcommand{\var}[1]{\mathrm{Var}\left[#1\right]}
+#' 
+#' %%\newcommand<>{\emphcol}[1]{\textcolor#2{red!50!blue}{#1}}
+#' \newcommand\scinot[2]{$#1 \times 10^{#2}$}
+#' 
+#' %%%%%%%%%%%%%%%%%%
+#' 
+#' \title{Introduction to model parameter estimation}
+#' 
+#' \author{Aaron A. King\\
+#' with contributions from\\
+#' Ottar Bj{\o}rnstad, Ben Bolker, John Drake, Pej Rohani, and Dave Smith
+#' }
+#' 
+#' \date{\today\\
+#' \vspace{1em}
+#' Licensed under the Creative Commons attribution-noncommercial license, \texttt{http://creativecommons.org/licenses/by-nc/3.0/}.
+#' Please share and remix noncommercially, mentioning its origin. \parbox[bottom]{57pt}{\includegraphics[height=20pt]{cc-by-nc}}}
+#' 
+#' 
+## ----set-opts,echo=F,results='hide'--------------------------------------
+
+## don't worry about executing the following: 
+## it is needed for the typesetting, which is done using 'knitr'
+opts_chunk$set(
+               progress=T,prompt=F,tidy=F,highlight=T,
+               warning=F,message=F,
+               results='markup',echo=T,dev='pdf',
+               size='small',
+               fig.path='figure/parest-',fig.lp="fig:",
+               fig.align='center',
+               fig.show='asis',
+               fig.height=5,fig.width=10,dpi=150,dev='png'
+               )
+
+options(stringsAsFactors=FALSE,help_type="html")
+
+#' 
+#' \begin{document}
+#' 
+#' \maketitle
+#' 
+#' \section{Introduction}
+#' 
+#' This course will focus on the utility of models in understanding, predicting, and controlling infectious disease systems.
+#' Models play a central role in this work because they allow us to precisely and quantitatively express our ideas about the mechanisms of infectious disease transmission, immunity, and ecology.
+#' To the extent our understanding of the important mechanisms is correct, such models are extremely useful in the design of policy.
+#' On the other hand, models are useful in uncovering the important mechanisms, inasmuch as we can compare model predictions to data.
+#' Specifically, if we can translate competing hypotheses into mathematical models, these can be compared in terms of their ability to correctly capture the patterns seen in data.
+#' In order to fairly compare competing models, we must first try to find out what is the best each model can do.
+#' Practically speaking, this means that we have to find the values of the models' parameters that give the closest correspondence between model predictions and data.
+#' Parameter estimation can be important even when we are fairly confident in the ability of a single model to explain the dynamics.
+#' Not surprisingly, the all-important quantity $R_0$ is frequently the focus of considerable parameter-estimation effort.
+#' Here, we'll try our hand as estimating $R_0$ and other model parameters from an epidemic curve using a couple of different methods.
+#' 
+#' \section{Estimating $R_0$ in an invasion}
+#' 
+#' We saw in the lecture how, during the early stages of an outbreak, the number of infected individuals $Y$ is approximately 
+#' \begin{equation*}
+#'   Y\;\approx\;Y_0\,e^{((R_0-1)\,(\gamma+\mu)\,t)}
+#' \end{equation*}
+#' where $Y_0$ is the (small) number of infectives at time $0$, $\frac{1}{\gamma}$ is the infectious period, and $\frac{1}{\mu}$ is the host lifespan.
+#' Taking logs of both sides, we get
+#' \begin{equation*}
+#'   \log{Y}\;\approx\;\log{Y_0}+(R_0-1)\,(\gamma+\mu)\,t, 
+#' \end{equation*}
+#' which implies that a semi-log plot of $Y$ vs $t$ should be approximately linear with a slope proportional to $R_0-1$ and the recovery rate.
+#' 
+#' We can plot the 1977 boarding school influenza data in this way to see if this is the case.
+#' 
+## ----bbs-flu,echo=T------------------------------------------------------
+url <- "https://kingaa.github.io/thid/data/bbs.csv"
+flu <- read.csv(url)
+## or download the file and do:
+## flu <- read.csv(file="bbs.csv")
+plot(flu~day,data=flu,type='b',bty='l',
+     main='boarding school influenza outbreak',
+     xlab='day',ylab='Influenza cases')
+plot(flu~day,data=flu,type='b',log='y',bty='l',
+     xlab='day',ylab='Influenza cases')
+
+#' 
+#' Plotted on a log scale, the linearity of the first several data points is indeed striking.
+#' This suggests that we can obtain a cheap and cheerful estimate of $R_0$ by a simple linear regression.
+## ----bbs-flu-lm,echo=T,results='markup'----------------------------------
+fit <- lm(log(flu)~day,data=subset(flu,day<=4))
+summary(fit)
+coef(fit)
+slope <- coef(fit)[2]
+slope
+
+#' Now, we know that influenza's infectious period is about 2.5~da.
+#' Moreover, since this is far shorter than an average human life ($\mu\ll\gamma$), we can neglect $\mu$ in our estimating equation.
+#' Thus our estimate of $R_0$ is 
+#' \begin{equation*}
+#'   \hat{R_{0}}\;=\;\code{slope}/\gamma+1\;\approx\;\Sexpr{signif(slope,2)}\times{2.5}+1\;\approx\;\Sexpr{signif(slope*2.5+1,2)}.
+#' \end{equation*}
+#' 
+#' Our strategy in this case has been to redefine the problem so that it fits a standard form, i.e., we showed how to rearrange the model so that the relevant quantity ($R_0$) could be obtained from linear regression. 
+#' %This means that all the usual diagnostics associated with linear regression are also available to check the fit of the model.
+#' We can get a rough estimate of the uncertainty in our estimate by looking at the standard errors in our estimator.
+## ----bbs-flu-se,results='markup'-----------------------------------------
+coef(summary(fit))
+slope.se <- coef(summary(fit))[2,2]
+2.5*slope.se
+
+#' So we reckon we've got an error of $\pm\Sexpr{signif(2.5*slope.se,1)}$ in our estimate of $R_0$, i.e., we feel pretty confident that $\Sexpr{signif((slope-2*slope.se)*2.5+1,3)}<R_{0}<\Sexpr{signif((slope+2*slope.se)*2.5+1,3)}$.
+#' 
+#' A defect of this method is that it uses only a small amount of the data to compute an important quantity.
+#' Moreover, we have to make a subjective judgement as to how much of the data to use.
+#' Further, as we use more data, and presumably obtain more precise estimates, we simulataneously get further from the realm where our approximation is valid, which introduces greater bias.
+#' Let's see how our estimates of $R_0$ depend on what we choose to be the ``initial phase'' of the outbreak.
+#' Below, we estimate $R_0$ and its standard error using the first 2, 3, 4, \dots, 10 data points.
+#' 
+## ----inv-R0-est----------------------------------------------------------
+days <- 2:10
+slope <- numeric(length=length(days))
+slope.se <- numeric(length=length(days))
+for (k in seq_along(days)) {
+  fit <- lm(log(flu)~day,data=subset(flu,day<=days[k]))
+  slope[k] <- coef(summary(fit))[2,1]
+  slope.se[k] <- coef(summary(fit))[2,2]
+}
+R0.hat <- slope*2.5+1
+R0.se <- slope.se*2.5
+plot(slope~days,type='o')
+
+#' 
+#' We'll plot these estimates against their uncertainties to show this precision-accuracy tradeoff.
+#' 
+## ----inv-R0-est-se-------------------------------------------------------
+plot(slope.se~days,type='o')
+plot(range(days),
+     range(c(R0.hat-2*R0.se,R0.hat+2*R0.se),na.rm=T),
+     type='n',bty='l',
+     xlab="length of initial phase (da)",
+     ylab=expression("estimated"~R[0]))
+lines(R0.hat~days,type='o',lwd=2)
+lines(R0.hat+2*R0.se~days,type='l')
+lines(R0.hat-2*R0.se~days,type='l')
+
+#' 
+#' \begin{exercise}
+#'   Biweekly data for outbreaks of measles in three communities within Niamey, Niger are provided in the file \url{https://kingaa.github.io/thid/data/niamey.csv}. 
+#'   Use this method to obtain estimates of $R_0$ for measles using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
+#' \end{exercise}
+#' 
+## ----niamey-exercise,eval=F,echo=F---------------------------------------
+## url <- "https://kingaa.github.io/thid/data/niamey.csv"
+## niamey <- read.csv(url)
+## require(ggplot2)
+## ggplot(data=niamey,mapping=aes(x=biweek,y=measles,group=community,color=community))+
+##   geom_line()+theme_bw()+scale_y_log()
+
+#' 
+#' \section{Fitting deterministic dynamical epidemiological models to data}
+#' 
+#' Now we move on to a much more general but considerably more complicated technique for estimating $R_0$. 
+#' The method of \emph{least squares} gives us a way to quantify the discrepancy between the data and a model's predictions.
+#' We can then search over all possible values of a model's parameters to find the parameters that minimize this discrepancy.
+#' 
+#' We'll illustrate this method using the Niamey data, which we'll load and plot using the following commands:
+## ----niamey-plot,fig.height=6--------------------------------------------
+url <- "https://kingaa.github.io/thid/data/niamey.csv"
+niamey <- read.csv(url)
+plot(measles~biweek,data=niamey,type='n')
+lines(measles~biweek,data=subset(niamey,community=="A"),col=1)
+lines(measles~biweek,data=subset(niamey,community=="B"),col=2)
+lines(measles~biweek,data=subset(niamey,community=="C"),col=3)
+legend("topleft",col=1:3,lty=1,bty='n',
+       legend=paste("community",c("A","B","C")))
+
+
+#' 
+#' Since this is a single outbreak, and the number of births and deaths into the population over the course of the outbreak is small relative to the size of the population, we can treat this outbreak as if it were occurring in a closed population.
+#' We saw earlier how we can formulate the SIR equations in such a case and how we can solve the model equations to obtain trajectories.
+#' Before, we formulated the model in terms of the \emph{fractions}, $S$, $I$, $R$ of the host population in each compartment.
+#' Here, however, we need to track the \emph{numbers}, $X$, $Y$, $Z$, of individuals in the S, I, and R compartments, respectively.
+#' In terms of $X$, $Y$, $Z$, our frequency-dependent SIR model is
+#' \begin{equation*}
+#'     \begin{aligned}
+#'       \frac{dX}{dt} &= -\frac{\beta\,X\,Y}{N}\\
+#'       \frac{dY}{dt} &= \frac{\beta\,X\,Y}{N}-\gamma\,Y\\
+#'       \frac{dZ}{dt} &= \gamma\,Y\\
+#'     \end{aligned}
+#' \end{equation*}
+#' Where $N=X+Y+Z$ is the total host population size.
+#' A function suitable for use with \code{deSolve} for the closed SIR epidemic is:
+## ----closed-sir-model-defn-----------------------------------------------
+
+require(deSolve)
+
+closed.sir.model <- function (t, x, params) {
+  X <- x[1]
+  Y <- x[2]
+  Z <- x[3]
+
+  beta <- params["beta"]
+  gamma <- params["gamma"]
+  pop <- params["popsize"]
+
+  dXdt <- -beta*X*Y/pop
+  dYdt <- beta*X*Y/pop-gamma*Y
+  dZdt <- gamma*Y
+
+  list(c(dXdt,dYdt,dZdt))
+}
+
+
+#' 
+#' Thus far, we have only considered deterministic models.
+#' In the next lab, we will begin to think about more realistic models that begin to take into account some aspects of the stochastic nature of real epidemics.
+#' For now, under the assumption that the epidemic is deterministic, parameter estimation is a matter of finding the model trajectory that gives the best fit to the data.
+#' The first thing we need is a function that computes a trajectory given parameters of the model.
+## ----closed-sir-predictions----------------------------------------------
+
+prediction <- function (params, times) {
+  xstart <- params[c("X.0","Y.0","Z.0")]
+  out <- ode(
+             func=closed.sir.model,
+             y=xstart,
+             times=times,
+             parms=params
+             )
+  out[,3]     # return the number of infectives
+}
+
+
+#' Now we set up a function that will calculate the sum of the squared differences (or errors) between the data and the model predictions.
+## ----closed-sir-sse,eval=T-----------------------------------------------
+sse <- function (params, data) {
+  times <- c(0,data$biweek/26)          # convert to years
+  pred <- prediction(params,times)
+  discrep <- pred[-1]-data$measles
+  sum(discrep^2)                        # sum of squared errors
+}
+
+#' To get a sense of what this gives us, let's explore varying some parameters and computing the SSE for community ``A'' of the Niamey data set.
+#' To begin with, we'll assume we know that $\gamma=365/13$ and that the initial numbers of susceptibles, infectives, and recovereds, $X_0, Y_0, Z_0$ were 10000, 10, and 20000, respectively.
+#' We'll write a little function that will plug a value of $\beta$ into the parameter vector and compute the SSE.
+## ----sse-calc1,cache=T---------------------------------------------------
+dat <- subset(niamey,community=="A")
+params <- c(X.0=10000,Y.0=10,Z.0=39990,popsize=50000,
+            gamma=365/13,beta=NA)
+f <- function (beta) {
+  params["beta"] <- beta
+  sse(params,dat)
+}
+beta <- seq(from=0,to=1000,by=5)
+SSE <- sapply(beta,f)
+
+#' We take our estimate, $\hat{\beta}$ to be the value of $\beta$ that gives the smallest SSE.
+## ----beta.hat,eval=T-----------------------------------------------------
+beta.hat <- beta[which.min(SSE)]
+
+#' 
+#' Fig.~\ref{fig:sse-plot1}A shows SSE vs.\ $\beta$.
+#' What does the SIR model predict at $\beta=\hat{\beta}$?
+#' We compute the model's trajectory to find out:
+## ----sse-betahat,eval=F--------------------------------------------------
+## params["beta"] <- beta.hat
+## plot(measles~biweek,data=dat)
+## lines(dat$biweek,prediction(params,dat$biweek/26))
+
+#' This plot is Fig.~\ref{fig:sse-plot1}B.
+#' 
+#' \begin{exercise}
+#'   Use this method to obtain estimates of $R_0$ for measles from each of the three communities in Niamey.
+#'   You may again assume that the infectious period is approximately two weeks.
+#' \end{exercise}
+#' 
+#' \begin{figure}
+#'   \begin{center}
+## ----sse-plot1,fig.height=5,fig.width=5,echo=F---------------------------
+
+op <- par(mfcol=c(2,1),mar=c(3,3,1,1),mgp=c(2,1,0))
+plot(beta,SSE,type='l')
+abline(v=beta.hat,lty=2)
+plot.window(c(0,1),c(0,1))
+text(0.05,0.9,"A")
+params["beta"] <- beta.hat
+plot(measles~biweek,data=dat)
+lines(dat$biweek,prediction(params,dat$biweek/26))
+plot.window(c(0,1),c(0,1))
+text(0.05,0.9,"B")
+par(op)
+
+
+#'   \end{center}
+#'   \caption{
+#'     (A) Discrepancy (sum of squared error) between SIR model predictions and the measles data from Niamey community ``A'' as a function of $\beta$.
+#'     The vertical line gives the least-squared estimate, $\hat{\beta}=\Sexpr{signif(beta.hat,2)}$.
+#'     (B) Trajectory of the model at $\beta=\hat{\beta}$ (solid curve) compared to the data (circles).
+#'   }
+#'   \label{fig:sse-plot1}
+#' \end{figure}
+#' 
+#' 
+#' Clearly, this fit leaves much to be desired, but recall that we've here assumed that we know the correct values for all parameters but $\beta$.
+#' In particular, we've assumed we know the infectious period, and the initial conditions.
+#' [NB: the initial value of $Z$ is entirely irrelevant.  Why?]
+#' Let's see what happens when we try to estimate two parameters at once.
+## ----sse-calc2,cache=T---------------------------------------------------
+
+dat <- subset(niamey,community=="A")
+params <- c(X.0=NA,Y.0=10,Z.0=1,popsize=50000,
+            gamma=365/13,beta=NA)
+f <- function (par) {
+  params["beta"] <- par[1]
+  params["X.0"] <- par[2] 
+  sse(params,dat)
+}
+beta <- seq(from=100,to=300,by=5)
+X.0 <- seq(from=4000,to=20000,by=1000)
+grid <- expand.grid(beta=beta,X.0=X.0)
+grid$SSE <- apply(grid,1,f)
+
+
+#' 
+#' We can visualize this as a surface.
+#' A convenient function for this is \code{contourplot} from the \pkg{lattice} package:
+## ----sse-plot2,fig.height=6----------------------------------------------
+
+require(lattice)
+contourplot(sqrt(SSE)~beta+X.0,data=grid,cuts=30)
+
+
+#' 
+#' \begin{exercise}
+#'   Discuss the shape of this surface: 
+#'   what does it tell us about the uncertainty in the model's parameters?
+#' \end{exercise}
+#' 
+#' \begin{challenge}
+#'   Repeat the estimation using a closed SEIR model.
+#'   Assume that the infectious period is 5~da and the latent period is 8~da.
+#'   How and why does your estimate of $R_0$ differ from that you obtained using the SIR model?
+#' \end{challenge}
+#' 
+#' \section{Optimization algorithms}
+#' 
+#' When we have more than two parameters to estimate (as we usually will), we cannot rely on grid searches or simple graphical techniques to find the region of parameter space with the best parameters.
+#' We need more systematic ways of searching through the parameter space.
+#' Mathematicians have devoted much study to \emph{optimization algorithms}, and there are many of these.
+#' Many of them are implemented in \pkg{R}.
+#' 
+#' The first place to go is the function \code{optim}, which implements several common, well-studied, generally-useful optimization algorithms.
+## ----eval=F--------------------------------------------------------------
+## ?optim
+
+#' To use it, we have to specify the function we want to \emph{minimize} and a starting value for the parameters.
+#' Starting from this point, \code{optim}'s algorithms will search the parameter space for the value that minimizes the value of our \emph{objective function}.
+#' 
+#' We'll write an objective function to try to estimate $\beta$, $X_0$, and $Y_0$ simultaneously.
+#' For the moment, we'll continue to assume that the recovery rate $\gamma$ is known.
+## ----sse-calc3,eval=T,cache=T--------------------------------------------
+
+dat <- subset(niamey,community=="A")
+params <- c(X.0=NA,Y.0=NA,Z.0=1,popsize=50000,
+            gamma=365/13,beta=NA)
+f <- function (par) {
+  params[c("X.0","Y.0","beta")] <- par
+  sse(params,dat)
+}
+optim(fn=f,par=c(10000,10,220)) -> fit
+fit
+
+
+#' 
+## ----sse-exercise1,eval=F,echo=F,results='markup'------------------------
+## 
+## dat <- subset(niamey,community=="A")
+## f <- function (par) {
+##   par <- as.numeric(par)
+##   params <- c(X.0=exp(par[1]),Y.0=exp(par[2]),Z.0=1,popsize=50000,
+##               gamma=par[4],beta=exp(par[3]))
+##   sse(params,dat)
+## }
+## optim(fn=f,par=log(c(10000,10,220,13/365))) -> fit
+## fit
+## 
+
+#' 
+#' \begin{exercise}\label{ex:sse-scales}
+#'   In the foregoing, we've estimated parameters by minimizing the sum of squared differences between model-predicted number of cases and the data.
+#'   What would happen if we tried to minimize the squared error on the log scale, i.e., to minimize $(\log(\mathrm{model})-\log(\mathrm{data}))^2$?
+#'   What would happen if we minimized the squared error on the square-root scale, i.e., $(\sqrt{\mathrm{model}}-\sqrt{\mathrm{data}})^2$?
+#'   What's the ``right'' scale to choose?
+#' \end{exercise}
+#' 
+#' \begin{challenge}
+#'   Try to estimate all four parameters at once.
+#'   Start your algorithm from several places to check that they all converge to the same place.
+#'   You may find it useful to restart the optimizer to verify its convergence.
+#' \end{challenge}
+#' 
+#' \begin{challenge}
+#'   Fig.~\ref{fig:sse-plot1} shows a second local minimum of the SSE at a much higher value of $\beta$.
+#'   Why is this?
+#' \end{challenge}
+#' 
+#' Many other optimization algorithms exist.
+#' \code{optim} implements several of these (see \verb+?optim+).
+#' Other functions and packages you might look into include:
+#' \code{constrOptim}, \code{optimx}, \code{nlm}, \code{nlminb}, \code{nloptr} (from the \pkg{nloptr} package), and \code{subplex} (from the \pkg{subplex} package).
+#' 
+#' \section{The likelihood}
+#' 
+#' %% - different results for different scalings: tantamount to assuming errors have some scale
+#' %% - is there a ``correct'' solution?
+#' 
+#' We have seen that fitting mechanistic models to data is a powerful and general approach to estimating parameters.
+#' We saw too that least-squares fitting, is a straightforward way to do this.
+#' However, several issues arose.
+#' First, there was an element of arbitrariness in the choice of discrepancy measure.
+#' Second, although we could fairly easily obtain point estimates of model parameters using least-squares, it was not clear how we could obtain concomitant estimates of parameter uncertainty (e.g., confidence intervals).
+#' Finally, we began to see that there are limits to our ability to estimate parameters.
+#' In this lab, we'll explore these issues, and see that likelihood offers an attractive resolution to the first and second of these, but that the third is a fundamental challenge.
+#' 
+#' Likelihood has many advantages:
+#' \begin{enumerate}
+#' \item fidelity to model
+#' \item a deep and general theory
+#' \item a sound theoretical basis for confidence intervals and model selection
+#' \item statistical efficiency
+#' \end{enumerate}
+#' and some disadvantages:
+#' \begin{enumerate}
+#' \item fidelity to model
+#' \item fragility (lack of robustness)
+#' \end{enumerate}
+#' 
+#' \subsection{General definition}
+#' 
+#' Likelihood is the \emph{probability of a given set of data $D$ having occurred under a particular hypothesis $H$}: 
+#' \begin{equation*}
+#'   \mathcal{L}(H,D)=\Prob{D|H}
+#' \end{equation*}
+#' 
+#' A simple example: suppose $n$ individuals participate in a serological survey and $k$ of these individuals are found to be seropositive.
+#' One parameter of interest is the true fraction, $p$, of the population that has seroconverted.
+#' Assuming the sample was drawn at random and the population is large, then the probability of the data ($m$ of $n$ individuals seropositive) given the hypothesis that the true probability is $p$ is
+#' \begin{equation*}
+#'   \Prob{D|H} = \binom{n}{k}\,p^k\,(1-p)^{n-k}
+#' \end{equation*}
+#' 
+#' If the true seroprevalence was, say, $p=0.3$, what does the probability of observing $k$ seropositives in a sample of size $n=50$ look like?
+## ----binom-prob-plot-----------------------------------------------------
+
+p <- 0.3
+n <- 50
+k <- seq(0,50,by=1)
+prob <- dbinom(x=k,size=n,prob=p) 
+plot(k,prob,type='h',lwd=5,lend=1,
+     ylab="probability")
+
+
+#' 
+#' The likelihood is a function of the unknown parameters.
+#' In this case, if we assume $n$ is known, then the likelihood is a function of $p$ alone:
+#' \begin{equation*}
+#'   \mathcal{L}(p) = \binom{n}{k}\,p^k\,(1-p)^{n-k}
+#' \end{equation*}
+#' Typically the logarithm of this function is more interesting than $\mathcal{L}$ itself.
+#' Looking at this function for each of two different surveys:
+## ----binom-lik-plot1,echo=T,eval=T---------------------------------------
+
+k1 <- 18
+n1 <- 50
+p <- seq(0,1,by=0.001)
+plot(p,dbinom(x=k1,size=n1,prob=p,log=TRUE),
+     ylim=c(-10,-2),ylab="log-likelihood",
+     type='l')
+abline(h=dbinom(x=k1,size=n1,prob=k1/n1,log=TRUE)-
+       0.5*qchisq(p=0.95,df=1),col='red')
+abline(v=k1/n1,col='blue')
+
+
+## ----binom-lik-plot2,echo=T,eval=T---------------------------------------
+
+k2 <- 243
+n2 <- 782
+p <- seq(0,1,by=0.001)
+plot(p,dbinom(x=k2,size=n2,prob=p,log=TRUE),
+     ylim=c(-10,-2),ylab="log-likelihood",
+     type='l')
+abline(h=dbinom(x=k2,size=n2,prob=k2/n2,log=TRUE)-
+       0.5*qchisq(p=0.95,df=1),col='red')
+abline(v=k2/n2,col='blue')
+
+
+#' In the above two plots, the likelihood is a function of the model parameter $p$.
+#' Vertical lines show the maximum likelihood estimate (MLE) of $p$.
+#' Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95\% confidence level.
+#' 
+#' \begin{exercise}
+#'   How do the two curves just plotted differ from one another?
+#'   What features of the data are responsible for the differences?
+#' \end{exercise}
+#' 
+#' \subsection{From data points to data sets}
+#' 
+#' Let's suppose we have three samples, $D_1, D_2, D_3$, taken by three different researchers, for the same large population.
+#' If these samples are \emph{independent}, then
+#' \begin{equation*}
+#'   \Prob{D|H} = \Prob{D_1|H}\times\Prob{D_2|H}\times\Prob{D_3|H}
+#' \end{equation*}
+#' which means that the likelihood of the full data set is the product of the likelihoods from each of the samples.
+#' In other words, the likelihood gives a general recipe for combining data from different studies.
+#' We'd compute the likelihood as follows:
+## ----binom-lik2,results='markup'-----------------------------------------
+
+n <- c(13,484,3200)
+k <- c(4,217,1118)
+dbinom(x=k,size=n,prob=0.2,log=TRUE)
+sum(dbinom(x=k,size=n,prob=0.2,log=TRUE))
+ll.fn <- function (p) {
+  sum(dbinom(x=k,size=n,prob=p,log=TRUE))
+}
+p <- seq(0,1,by=0.001)
+loglik <- sapply(p,ll.fn)
+plot(p,loglik,type='l',ylim=max(loglik)+c(-10,0))
+
+
+#' 
+#' \section{Fitting SIR to an epidemic curve using likelihood}
+#' 
+#' Let's revisit the model-fitting we did yesterday for the case of measles in Niger.
+#' We'll simplify the model slightly to eliminate some unnecessary and wasteful elements.
+#' Our frequency-dependent SIR model, again, is
+#' \begin{equation*}
+#'     \begin{aligned}
+#'       \frac{dX}{dt} &= -\frac{\beta\,X\,Y}{N}\\
+#'       \frac{dY}{dt} &= \frac{\beta\,X\,Y}{N}-\gamma\,Y\\
+#'       \frac{dZ}{dt} &= \gamma\,Y\\
+#'     \end{aligned}
+#' \end{equation*}
+#' Notice that
+#' \begin{inparaenum}
+#' \item the $Z$ equation is irrelevant for the dynamics of the epidemic and we can drop it entirely, and
+#' \item $\beta$ only ever occurs in combination with $N$, so we can combine these two into a single parameter by defining $b=\beta/N$.
+#' \end{inparaenum}
+#' We can modify the \pkg{R} codes we used before to take account of this.
+## ----closed-sir-model-defn-two-------------------------------------------
+
+require(deSolve)
+
+closed.sir.model <- function (t, x, params) {
+  inc <- params["b"]*x[1]*x[2]          # incidence
+  list(c(-inc,inc-params["gamma"]*x[2]))
+}
+
+
+#' 
+## ----closed-sir-predictions-two------------------------------------------
+
+prediction <- function (params, times) {
+  out <- ode(
+             func=closed.sir.model,
+             y=params[c("X.0","Y.0")],
+             times=c(0,times),
+             parms=params
+             )
+## return the Y variable only
+## and discard Y(0)
+  out[-1,3]
+}
+
+
+#' 
+#' Earlier, we used SSE as a measure of the discrepancy between model predictions and data:
+## ----closed-sir-sse-two,eval=T-------------------------------------------
+
+sse <- function (params, data) {
+  times <- data$biweek/26               # convert to years
+  pred <- prediction(params,times)
+  discrep <- pred-data$measles
+  sum(discrep^2)                        # sum of squared errors
+}
+
+
+#' Now let's use likelihood instead.
+#' Let's suppose that, when we record cases, we make errors that are normal.
+#' Here's how we can compute the likelihood of the data given the model and its parameters:
+## ----closed-sir-negloglik,eval=T-----------------------------------------
+
+loglik <- function (params, data) {
+  times <- data$biweek/26
+  pred <- prediction(params,times)
+  sum(dnorm(x=data$measles,mean=pred,sd=params["sigma"],log=TRUE))
+}
+
+
+#' 
+## ----loglik-calc1,cache=T------------------------------------------------
+
+dat <- subset(niamey,community=="A")
+params <- c(X.0=10000,Y.0=10,gamma=365/13,b=NA,sigma=1)
+
+f <- function (b) {
+  par <- params
+  par["b"] <- b
+  loglik(par,dat)
+}
+
+b <- seq(from=0,to=0.02,by=0.0001)
+ll <- sapply(b,f)
+
+
+#' 
+#' We plot the results:
+## ----b-hat-plot----------------------------------------------------------
+
+plot(b,-ll,type='l',ylab=expression(-log(L)))
+b.hat <- b[which.max(ll)]
+abline(v=b.hat,lty=2)
+
+
+#' 
+#' The great similarity in the likelihood estimate to our first least-squares estimate is no accident.
+#' Why is this?
+#' Let $y_t$ be the observed number of infectives at time $t$ and $Y_t$ be the model's prediction.
+#' Then the log likelihood is
+#' \begin{equation*}
+#'   \begin{split}
+#'     \log\Prob{y_t|Y_t} &= \log{\left(\frac{1}{\sqrt{2\pi\sigma^2}}\,\exp{\left(-\frac{(y_t-Y_t)^2}{2\sigma^2}\right)}\right)}\\
+#'     &= -\tfrac{1}{2}\,\log{2\pi\sigma^2}-\tfrac{1}{2}\,\frac{(y_t-Y_t)^2}{\sigma^2}\\
+#'     &\text{and}\\
+#'     \log\mathcal{L} &= -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)
+#'   \end{split}
+#' \end{equation*}
+#' So MLE and least-squares are equivalent if the errors are normal with constant variance!
+#' 
+#' \begin{exercise}
+#'   Suppose, alternatively, that the errors are log-normal with constant variance.
+#'   Under what definition of SSE will least-squares and maximum likelihood give the same parameter estimates?
+#' \end{exercise}
+#' 
+#' \clearpage
+#' \section{Modeling the noise}
+#' 
+#' All this raises the question of what the best model for the errors really is.
+#' Of course, the answer will certainly depend on the nature of the data.
+#' The philosophy of likelihood encourages us to think about the question mechanistically.
+#' When the data, $y_t$, are the result of a sampling process, for example, we can think of them as binomial samples
+#' \begin{equation*}
+#'   y_t\;\sim\;\mathrm{binomial}\left(Y_t,\frac{n}{N}\right)
+#' \end{equation*}
+#' where $n$ is the sample size, $N$ the population size, and $Y_t$ is the true number of infections at time $t$.
+#' Alternatively, we might think of $y_t$ as Poisson samples
+#' \begin{equation*}
+#'   y_t\;\sim\;\mathrm{Poisson}(p\,Y_t)
+#' \end{equation*}
+#' where the parameter $p$ reflects a combination of sampling efficiency and the detectability of infections.
+#' The latter leads to the following log-likelihood function
+## ----poisson-lik---------------------------------------------------------
+
+poisson.loglik <- function (params, data) {
+  times <- data$biweek/26
+  pred <- prediction(params,times)
+  sum(dpois(x=data$measles,lambda=params["p"]*pred[-1],log=TRUE))
+}
+
+
+#' Let's see what the MLE parameters are for this model.
+#' We'll start by estimating just one parameter.
+#' Now, we must have $b>0$.
+#' This is a \emph{constraint} on the parameter.
+#' One way to enforce this constraint is by transforming the parameter so that it cannot ever be negative.
+#' We'll log-transform $b$.
+## ----fit-b,results='markup'----------------------------------------------
+
+dat <- subset(niamey,community=="A")
+params <- c(X.0=20000,Y.0=1,gamma=365/13,b=NA,p=0.2)
+
+## objective function (-log(L))
+f <- function (log.b) {
+  params[c("b")] <- exp(log.b) # un-transform 'b'
+  -poisson.loglik(params,dat)
+}
+
+
+#' 
+#' For something new, we'll use the \code{mle2} function from the \pkg{bbmle} package to maximize the likelihood.
+#' \code{mle2} will employ an iterative algorithm for maximizing the likelihood.
+#' To get started, it needs an initial guess.
+#' %%It's usually a good idea to put a bit of thought into the guess.
+#' %%Since $b=\beta/N=R_0/(\mathrm{IP}\,N)$, where $\mathrm{IP}$ is the infectious period,
+#' %%and using guesses $R_0\,\approx\,15$, $\mathrm{IP}\,\approx\,13$~da, and $N\,\approx\,20000$, we get $b\,\approx\,15/(13{\times}20000)\,\mathrm{da}^{-1}\approx$~\Sexpr{signif(15/13/20000*365,2)}~yr$^{-1}$.
+## ----bbmle-one-----------------------------------------------------------
+
+require(bbmle)
+guess <- list(log.b=log(0.01))
+
+fit0 <- mle2(f,start=guess)
+fit0
+
+fit <-  mle2(f,start=as.list(coef(fit0)))
+fit
+
+
+#' 
+#' We can get an idea about the uncertainty and in particular obtain confidence intervals using the \emph{profile likelihood}.
+#' To profile over a parameter, we fix the value of that parameter at each of several values, then maximize the likelihood over the remaining unknown parameters.
+#' In \pkg{bblme}, this is quite easy to obtain.
+## ----profile1------------------------------------------------------------
+
+prof.b <- profile(fit)
+plot(prof.b)
+
+
+#' 
+#' Now let's try to estimate both $b$ and the reporting probability $p$.
+#' Since we have constraints on $p$ ($0 \le p \le 1$), we'll transform it as well.
+#' For this, the \emph{logit} function and its inverse are useful: 
+#' \begin{equation*}
+#'   \begin{gathered}
+#'     \mathrm{logit}(p)=\log{\frac{p}{1-p}} \qquad 
+#'     \mathrm{ilogit}(x)=\frac{1}{1+\exp(-x)}
+#'   \end{gathered}
+#' \end{equation*}
+#' 
+## ----fit-b-p,results='markup',cache=T------------------------------------
+
+dat <- subset(niamey,community=="A")
+params <- c(X.0=20000,Y.0=1,gamma=365/13,b=NA,p=NA)
+
+logit <- function (p) log(p/(1-p))      # the logit transform
+ilogit <- function (x) 1/(1+exp(-x))    # inverse logit
+
+f <- function (log.b, logit.p) {
+  par <- params
+  par[c("b","p")] <- c(exp(log.b),ilogit(logit.p))
+  -poisson.loglik(par,dat)
+}
+
+guess <- list(log.b=log(0.005),logit.p=logit(0.2))
+fit0 <- mle2(f,start=guess); fit0
+fit <-  mle2(f,start=as.list(coef(fit0))); fit
+
+## now untransform the parameters:
+mle <- with(
+            as.list(coef(fit)),
+            c(
+              b=exp(log.b),
+              p=ilogit(logit.p)
+              )
+            )
+mle
+
+
+#' 
+## ----profile2,cache=T,results='hide'-------------------------------------
+
+prof2 <- profile(fit)
+plot(prof2)
+
+
+#' 
+#' We can also get confidence intervals:
+## ----confint2,results='markup'-------------------------------------------
+
+ci <- confint(prof2)
+ci
+ci[1,] <- exp(ci[1,])
+ci[2,] <- ilogit(ci[2,])
+rownames(ci) <- c("b","p")
+ci
+
+
+#' 
+#' Let's make a contour plot to visualize the likelihood surface.
+## ----contour2,cache=T----------------------------------------------------
+
+dat <- subset(niamey,community=="A")
+
+## this time the objective function has to 
+## take a vector argument
+f <- function (pars) {
+  par <- params
+  par[c("b","p")] <- as.numeric(pars)
+  poisson.loglik(par,dat)
+}
+
+b <- seq(from=0.001,to=0.005,by=0.0001)
+p <- seq(0,1,by=0.05)
+grid <- expand.grid(b=b,p=p)
+grid$loglik <- apply(grid,1,f)
+grid <- subset(grid,is.finite(loglik))
+require(lattice)
+contourplot(loglik~b+p,data=grid,cuts=20)
+
+
+#' 
+#' The scale over which the log likelihood is varying is clearly huge relative to what is meaningful.
+#' Let's focus in on the region around the MLE.
+#' 
+## ----contour2-detail,cache=T---------------------------------------------
+
+b <- seq(from=0.00245,to=0.00255,length=50)
+p <- seq(0.44,0.49,length=50)
+grid <- expand.grid(b=b,p=p)
+grid$loglik <- apply(grid,1,f)
+grid <- subset(grid,is.finite(loglik))
+require(lattice)
+contourplot(loglik~b+p,data=grid,cuts=20)
+
+
+#' 
+#' Let's look at the model's predictions at the MLE.
+#' The model is a probability distribution, so we should look at a number of simulations.
+#' An important question is: are the data a plausible sample from the predicted probability distribution?
+## ----predictions---------------------------------------------------------
+
+params[c("b","p")] <- mle
+times <- c(dat$biweek/26)
+model.pred <- prediction(params,times)
+
+nsim <- 1000
+simdat <- replicate(
+                    n=nsim,
+                    rpois(n=length(model.pred),
+                          lambda=params["p"]*model.pred)
+                    )
+quants <- t(apply(simdat,1,quantile,probs=c(0.025,0.5,0.975)))
+matplot(times,quants,col="blue",lty=c(1,2,1),type='l') 
+points(measles~times,data=dat,type='b',col='red')
+
+
+#' 
+#' Clearly the model is not doing a very good job of capturing the pattern in the data.
+#' It appears that we will need an error model that has the potential for more variability than does the Poisson.
+#' Recall that, under the Poisson assumption, the variance of the error is equal to the mean.
+#' The negative binomial distribution is such a distribution.
+#' Let's explore the alternative assumption that $y_t$ is negative-binomially distributed with mean $p\,Y_t$, as before, but larger variance, $p\,Y_t\,(1+\theta\,p\,Y_t)$, i.e.,
+#' \begin{equation*}
+#'   y_t\;\sim\;\mathrm{negbin}\left(\mathrm{mu}=p\,Y_t,\;\mathrm{size}=\frac{1}{\theta}\right)
+#' \end{equation*}
+#' 
+## ----negbin-fit,cache=T--------------------------------------------------
+
+loglik <- function (params, data) {
+  times <- data$biweek/26
+  pred <- prediction(params,times)
+  sum(dnbinom(x=data$measles,
+              mu=params["p"]*pred[-1],size=1/params["theta"],
+              log=TRUE))
+}
+
+f <- function (log.b, logit.p, log.theta) {
+  par <- params
+  par[c("b","p","theta")] <- c(exp(log.b),
+                               ilogit(logit.p),
+                               exp(log.theta))
+  -loglik(par,dat)
+}
+
+guess <- list(log.b=log(params["b"]),
+              logit.p=logit(params["p"]),
+              log.theta=log(1))
+fit0 <- mle2(f,start=guess)
+fit <-  mle2(f,start=as.list(coef(fit0)))
+fit
+
+prof3 <- profile(fit)
+plot(prof3)
+
+mle <- with(
+            as.list(coef(fit)),
+            c(
+              b=exp(log.b),
+              p=ilogit(logit.p),
+              theta=exp(log.theta)
+              )
+            )
+
+params[c("b","p","theta")] <- mle
+times <- c(dat$biweek/26)
+model.pred <- prediction(params,times)
+
+nsim <- 1000
+simdat <- replicate(
+                    n=nsim,
+                    rnbinom(n=length(model.pred),
+                            mu=params["p"]*model.pred,
+                            size=1/params["theta"])
+                    )
+quants <- t(apply(simdat,1,quantile,probs=c(0.025,0.5,0.975)))
+matplot(times,quants,col="blue",lty=c(1,2,1),type='l') 
+lines(times,simdat[,1],col='black')
+points(measles~times,data=dat,type='b',col='red')
+
+
+#' 
+#' What does this plot tell us?
+#' Essentially, the deterministic SIR model, as we've written it, cannot capture the shape of the epidemic.
+#' In order to fit the data, the optimization algorithm has expanded the error variance, to the point of absurdity.
+#' The typical model realization (in black) does not much resemble the data.
+#' 
+#' \begin{exercise}
+#'   Revisit the other communities of Niamey and/or the British boarding school influenza data using the Poisson model and \pkg{bbmle}.
+#' \end{exercise}
+#' 
+#' \begin{challenge}
+#'   Try to estimate $p$, $b$, and $X_0$ simultaneously.
+#' \end{challenge}
+#' 
+#' \begin{challenge}
+#'   Reformulate the problem using the binomial error model.
+#'   Modify the parameter estimation codes appropriately, estimate the parameters, and comment on the results.
+#' \end{challenge}
+#' 
+#' \begin{challenge}
+#'   Reformulate the problem using a normal error model in which the variance is proportional to the mean:
+#'   \begin{equation*}
+#'     y_t\;\sim\;\mathrm{normal}\left(p\,Y_t,\sigma\,\sqrt{Y_t}\right).
+#'   \end{equation*}
+#'   Modify the parameter estimation codes appropriately, estimate the parameters (including both $p$ and $\sigma$), and comment on the results.
+#' \end{challenge}
+#' 
+#' \begin{challenge}
+#'   We've been treating the Niamey data as if they were direct---though inaccurate---measurements of the prevalence.
+#'   Actually, these are incidence data: they are measures of unique infections.
+#'   It would be more appropriate to model these data by adding another equation
+#'   \begin{equation*}
+#'     \frac{dC}{dt} = \frac{\beta\,X\,Y}{N}
+#'   \end{equation*}
+#'   to accumulate new infections and assuming the data are distributed according to, for example,
+#'   \begin{equation*}
+#'     y_t\;\sim\;\mathrm{Poisson}\left(p\,(C_t-C_{t-1})\right).
+#'   \end{equation*}
+#'   Modify the codes above to reflect these more appropriate assumptions, estimate the parameters, and comment on the results.
+#' \end{challenge}
+#' 
+#' \end{document}
+#' 
+#' \bibliographystyle{ecology}
+#' \bibliography{biblios}
+#' 
+#' 
+#' 
+#' * explain the assumption behind trajectory matching and that methods exist for dealing with process noise
+#' 
+#' 
+#' Second lab: 
+#' * linear regression on initial segment of flu data to estimate R0
+#' * exercise: try this for 4, 5, 6 points, look at both R0hat and se(R0)
+#' * least squares fit of closed epidemic model to data
+#' * one parameter at a time for fixed values of the others
+#' * again on log scale
+#' 
+#' 
+#' \section{Estimating $R_0$ from the final outbreak size}
+#' 
+#' Another approach to estimating $R_0$ takes advantage of information contained in the final size of an epidemic. Although unhelpful at the early stages of an epidemic (before the final epidemic size is observed), this method is nonetheless a useful tool for \emph{post hoc} analysis and is extremely general, since the formula holds for a wide class of epidemic models (Ma \& Earn 2006). (Note that one place where the formula fails is models with heterogeneous mixing, e.g., sexually transmitted diseases with a core group). The method is general and can be motivated by the following argument (Keeling and Rohani 2007):
+#' First, we assume that the epidemic is started by a single infectious individual in a completely susceptible population. On average, this individual infects $R_0$ others. The probability a particular individual escaped infection
+#' is therefore $e^{-R_0/N}$. 
+#' If $Z$ individuals have been infected, the probablility of an individual escaping 
+#' infection from all potential sources is $e^{-ZR_0/N}$. It follows that at the end of the epidemic a proportion $R(\infty)=Z/N$ have been infected and the fraction remaining susceptible is $S(\infty)=e^{-R(\infty)R_0}$, which is equal to $1-R(\infty)$. Rearranging, we have the transcendental equation $1-R(\infty)-e^{-R(\infty)R_0}=0$. We can gain some understanding by plotting the expression.
+#' 
+## ----eval=F--------------------------------------------------------------
+## curve(1-0.7-exp(-0.7*x), from=0.5, to=2.5, xlab='R(0)') #plot curve
+## abline(h=0, lty=2)    #add horiztonal line at zero
+## abline(v=1.71, lty=2) #add vertical line
+
+#' 
+#' Evidently, $R_0 \approx 1.71$. But, what is it exactly? Because this is a transcendental equation (i.e., it contains a function of the form $e^x$), numerical methods are required to find the value of $R_0$ that makes this equation true. Assuming such a value exists (which in our case it does), the root of this equation can be found using the \R{} function \code{uniroot} as follows. First, we code the equation as a function:
+#' 
+## ----eval=F--------------------------------------------------------------
+## final.size.estimator<-function(R0,final.size) 1-final.size-exp(-final.size*R0) #create a function
+
+#' Then, we use \code{uniroot} to find the correct value, in this case we assume a final epidemic size of $Z/N=0.7$.
+#' Notice the first argument to \code{uniroot} is the name of our function, the second argument is an interval over which to search for the root, and the third argument is the additional value needed by the function \code{final.size.estimator}.
+## ----eval=F--------------------------------------------------------------
+## R0<-uniroot(final.size.estimator,c(0,10),final.size=0.7) #estimate R0
+
+#' 
+#' \begin{exercise}
+#' This equation shows the important one-to-one relationship between $R_0$ and the final epidemic size. As an exercise, plot the relationship between the total epidemic size and $R_0$ for the complete range of values between 0 and 1.
+#' \end{exercise}
+#' 
+#' \begin{exercise}
+#'   Use the final epidemic size to estimate $R_0$ for flu from the boarding school data. Assume a population size of 3500. How sensitive are your results to this assumption?
+#' \end{exercise}
