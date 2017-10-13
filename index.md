@@ -21,7 +21,7 @@
 1. For 13 October:
 	a. Reading: K&R 2.7--3.1, [ODE lesson, &sect;&sect;1--5.](odes/ODEs_in_R.pdf).
 1. For 20 October:
-	a. Reading: K&R 3.2.
+	a. Reading: K&R 3.2, [Parameter Estimation lesson](odes/Parameter_Estimation.pdf).
 	a. Homework:TBA
 
 ##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)

@@ -50,23 +50,6 @@
 #' Please share and remix noncommercially, mentioning its origin. \parbox[bottom]{57pt}{\includegraphics[height=20pt]{cc-by-nc}}}
 #' 
 #' 
-## ----set-opts,echo=F,results='hide'--------------------------------------
-
-## don't worry about executing the following: 
-## it is needed for the typesetting, which is done using 'knitr'
-opts_chunk$set(
-               progress=T,prompt=F,tidy=F,highlight=T,
-               warning=F,message=F,
-               results='markup',echo=T,dev='pdf',
-               size='small',
-               fig.path='figure/parest-',fig.lp="fig:",
-               fig.align='center',
-               fig.show='asis',
-               fig.height=5,fig.width=10,dpi=150,dev='png'
-               )
-
-options(stringsAsFactors=FALSE,help_type="html")
-
 #' 
 #' \begin{document}
 #' 
