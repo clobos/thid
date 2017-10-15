@@ -368,8 +368,7 @@ contourplot(sqrt(SSE)~beta+X.0,data=grid,cuts=30)
 #' 
 #' We'll write an objective function to try to estimate $\beta$, $X_0$, and $Y_0$ simultaneously.
 #' For the moment, we'll continue to assume that the recovery rate $\gamma$ is known.
-## ----sse-calc3,eval=T,cache=T--------------------------------------------
-
+## ----sse-calc3,eval=T,cache=T,results="hide"-----------------------------
 dat <- subset(niamey,community=="A")
 params <- c(X.0=NA,Y.0=NA,Z.0=1,popsize=50000,
             gamma=365/13,beta=NA)
@@ -378,10 +377,10 @@ f <- function (par) {
   sse(params,dat)
 }
 optim(fn=f,par=c(10000,10,220)) -> fit
+
+## ----sse-calc3-res-------------------------------------------------------
 fit
 
-
-#' 
 ## ----sse-exercise1,eval=F,echo=F,results='markup'------------------------
 ## 
 ## dat <- subset(niamey,community=="A")
@@ -708,10 +707,10 @@ require(bbmle)
 guess <- list(log.b=log(0.01))
 
 fit0 <- mle2(f,start=guess)
-fit0
+print(fit0)
 
 fit <-  mle2(f,start=as.list(coef(fit0)))
-fit
+print(fit)
 
 
 #' 
@@ -751,7 +750,7 @@ f <- function (log.b, logit.p) {
 
 guess <- list(log.b=log(0.005),logit.p=logit(0.2))
 fit0 <- mle2(f,start=guess); fit0
-fit <-  mle2(f,start=as.list(coef(fit0))); fit
+fit <-  mle2(f,start=as.list(coef(fit0))); print(fit)
 
 ## now untransform the parameters:
 mle <- with(
@@ -849,7 +848,7 @@ points(measles~times,data=dat,type='b',col='red')
 #' The negative binomial distribution is such a distribution.
 #' Let's explore the alternative assumption that $y_t$ is negative-binomially distributed with mean $p\,Y_t$, as before, but larger variance, $p\,Y_t\,(1+\theta\,p\,Y_t)$, i.e.,
 #' \begin{equation*}
-#'   y_t\;\sim\;\mathrm{negbin}\left(\mathrm{mu}=p\,Y_t,\;\mathrm{size}=\frac{1}{\theta}\right)
+#'   y_t\;\sim\;\mathrm{Negbin}\left(\mathrm{mu}=p\,Y_t,\;\mathrm{size}=\frac{1}{\theta}\right)
 #' \end{equation*}
 #' 
 ## ----negbin-fit,cache=T--------------------------------------------------
@@ -875,7 +874,7 @@ guess <- list(log.b=log(params["b"]),
               log.theta=log(1))
 fit0 <- mle2(f,start=guess)
 fit <-  mle2(f,start=as.list(coef(fit0)))
-fit
+print(fit)
 
 prof3 <- profile(fit)
 plot(prof3)
