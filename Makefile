@@ -1,6 +1,6 @@
 MODULES = odes
 
-default: index.html hw1.pdf modules
+default: index.html modules hw1.pdf hw2.pdf
 
 modules:
 	for module in $(MODULES); do ($(MAKE) -C $$module); done

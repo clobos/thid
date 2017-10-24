@@ -1,0 +1,226 @@
+---
+title: "Theory of Infectious Disease"
+subtitle: Homework 2
+author: "Aaron A. King"
+output:
+  pdf_document: default
+params:
+  prefix: "hw2"
+---
+
+\newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+\newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+\newcommand{\dd}[1]{\mathrm{d}{#1}}
+\newcommand{\pd}[2]{\frac{\partial{#1}}{\partial{#2}}}
+\newcommand{\deriv}[2]{\frac{\dd{#1}}{\dd{#2}}}
+\newcommand\E[1]{\expect{#1}}
+\newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+\newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+\newcommand\dlta[1]{{\Delta}{#1}}
+\newcommand\lik{\mathcal{L}}
+\newcommand\loglik{\ell}
+\newcommand\equals{{=\,}}
+\newcommand\R{\mathbb{R}}
+\newcommand\data[1]{#1^*}
+\newcommand\params{\, ; \,}
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = FALSE, cache=TRUE,
+    fig.align="center",
+    cache.path=paste0("cache/",params$prefix),
+    fig.path=paste0("figure/",params$prefix))
+library(ggplot2)
+library(reshape2)
+library(plyr)
+library(grid)
+```
+
+In this lesson, you'll derive some of the key expressions for compartmental models, from the probabilistic point of view.
+Specific exercises for you are indicated **in boldface**.
+
+## Residence time in a compartment
+
+In the context of compartmental models, the following diagram has a specific meaning.
+
+```{r comp1,fig.height=0.5,fig.width=1}
+library(grid)
+vp <- viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc"))
+pushViewport(vp)
+grid.rect(x=c(1/4),y=c(1/2),width=1/2,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/4),y=c(1/2),label=expression(N),gp=gpar(fontsize=18))
+grid.lines(x=c(1/2,1),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=3/4,y=unit(1/2,"npc")+unit(8,"point"),label=c(expression(mu)),gp=gpar(fontsize=16))
+popViewport(1)
+```
+
+It means that the *occupancy* of the compartment, i.e., the number of individual hosts within it, at any time, is $N$.
+Each of these individuals has a risk, or *hazard*, $\mu$, of leaving the compartment.
+This hazard is a rate: it has units of inverse time.
+
+What does this mean?
+Let $T$ be the amount of time a host spends inside the compartment, the *residence time*.
+$T$ is a random variable.
+How is it distributed?
+
+To answer this, we'll derive an equation for, $\prob{T\le t}$, the cumulative distribution function for $T$.
+First, notice that
+$$\begin{aligned}\prob{T\le t+\dlta{t}} &= \prob{T\le t} + \prob{T > t\;\&\;T\le t+\dlta{t}}\\ &= \prob{T\le t} + \prob{T > t}\,\prob{T\le t+\dlta{t}\;\vert\;T > t}.\end{aligned}$$
+
+**Why?**
+
+Therefore
+$$\prob{T\le t+\dlta{t}}-\prob{T\le t}=\Big(1-\prob{T\le t}\Big)\,\prob{T\le t+\dlta{t}\;\vert\;T > t}.$$
+
+Now, the *memoryless* property of compartmental models comes into play.
+Since every host in the compartment is identical, there is no sense in which one host has been in the compartment longer than any other.
+In fact, each individual host's history is completely forgotten once it enters the compartment.
+Therefore, the probability that a host leaves the box at time $t$ cannot depend on how long that host has been in the box.
+It follows that
+$$\prob{T\le t+\dlta{t}\;\vert\;T > t} = \prob{T\le \dlta{t}}.$$
+
+Now, if $\dlta{t}$ is small, the last expression is approximately proportional to $\dlta{t}$.
+The proportionality constant is, by definition, $\mu$.
+
+Putting this all together, we have
+$$\prob{T\le t+\dlta{t}}-\prob{T\le t}=\Big(1-\prob{T\le t}\Big)\,\mu\,\dlta{t}+o(\dlta{t}),$$
+where the $o(\dlta{t})$ term is something that is small relative to $\dlta{t}$, at least when $\dlta{t}$ is small.
+Dividing the last equation through by $\dlta{t}$ and taking the limit as $\dlta{t}\to 0$, we obtain the differential equation
+$$\deriv{}{t}\!\prob{T\le t} = (1-\prob{T\le t})\,\mu.$$
+
+**Solve this to obtain $\prob{T\le t} = 1-e^{-\mu\,t}$.**
+This shows that $T$ is exponentially distributed with rate $\mu$.
+Sometimes we write $T\sim\dist{Expon}{\mu}$ as shorthand for this statement.
+
+**Work out the probability density function, $f_T(t)$, of $T$.**
+
+## Multiple hazards
+
+When there are multiple arrows leading out of a compartment, it means that there are multiple ways an individual host can exit.
+Each of these is associated with its own hazard.
+For example, consider the following diagram.
+
+```{r comp2,fig.height=1,fig.width=1}
+pushViewport(viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc")))
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.75))
+grid.rect(x=c(1/4),y=c(1/2),width=1/2,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/4),y=c(1/2),label=expression(N),gp=gpar(fontsize=18))
+grid.lines(x=c(1/2,1),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=3/4,y=unit(1/2,"npc")+unit(8,"point"),label=c(expression(sigma)),gp=gpar(fontsize=16))
+popViewport()
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.25))
+grid.lines(x=1/4,y=c(1,0),arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=unit(1/4,"npc")+unit(8,"point"),y=unit(1/2,"npc"),label=c(expression(mu)),gp=gpar(fontsize=16))
+popViewport()
+```
+
+Here, the total hazard, $\sigma+\mu$, is the hazard of leaving by either route.
+By the same logic as before, $T\sim\dist{Expon}{\sigma+\mu}$.
+
+How are we to think about the choice of *which* route an individual host will take?
+It turns out that we can reason about this *competing hazards* situation by imagining that each exit route has its own independent, exponentially distributed residence time.
+Specifically, let's suppose that $T_{\sigma}\sim\dist{Expon}{\sigma}$ is the time associated with the first route and $T_{\mu}\sim\dist{Expon}{\mu}$ is that associated with the second.
+
+**Show that $\min(T_\sigma,T_\mu)\sim\dist{Expon}{\sigma+\mu}$.**
+**Accomplish this by convincing yourself that**
+$$1-\prob{\min(T_\sigma,T_\mu)\le t} = \prob{\min(T_\sigma,T_\mu)>t} = \prob{T_\sigma>t}\,\prob{T_\mu>t}.$$
+
+Thus one can think of the two-exit situation by imagining that for each host, each exit "door" will open at a random time, independently of the other.
+The host leaves by whichever door opens first.
+This extends to the multiple-exit situation straightforwardly.
+
+What is the probability that a host leaves by the first door?
+To know this, we just need to find $\prob{T_\sigma<T_\mu}$.
+The joint probability density of $(T_\sigma,T_\mu)$ is
+$$f_{T_\sigma,T_\mu}(t_\sigma,t_\mu) = \sigma\,\mu\,e^{-\sigma\,t_\sigma-\mu\,t_\mu}.$$
+We integrate this density over the appropriate region:
+$$\prob{T_\sigma<T_\mu} = \int_{t_\sigma<t_\mu}\!f_{T_\sigma,T_\mu}(t_\sigma,t_\mu)\,\dd{t_\sigma}\dd{t_\mu} = \int_0^\infty\!\int_0^{t_\mu}\!\sigma\,\mu\,e^{-\sigma\,t_\sigma-\mu\,t_\mu}\,\dd{t_\sigma}\dd{t_\mu}.$$
+
+```{r di1,fig.height=2,fig.width=2}
+pushViewport(viewport(width=unit(0.9,"npc"),height=unit(0.9,"npc")))
+grid.polygon(x=c(0,0.95,0),y=c(0,0.95,0.95),gp=gpar(fill=grey(0.8),col=NA,lty=0,lwd=2))
+grid.lines(x=c(0,1),y=0,arrow=arrow(length=unit(0.02,"npc")),gp=gpar(lwd=2))
+grid.lines(y=c(0,1),x=0,arrow=arrow(length=unit(0.02,"npc")),gp=gpar(lwd=2))
+grid.lines(x=c(0,0.97),y=c(0,0.97),gp=gpar(lty="11",alpha=0.5,lwd=2))
+grid.text(x=unit(1,"npc")+unit(4,"point"),y=unit(8,"point"),label=expression(t[sigma]),gp=gpar(fontsize=9))
+grid.text(y=unit(1,"npc")+unit(2,"point"),x=unit(8,"point"),label=expression(t[mu]),gp=gpar(fontsize=9))
+grid.text(x=0.3,y=0.7,label=expression(t[sigma]<t[mu]),gp=gpar(fontsize=12))
+popViewport()
+```
+
+**Evaluate this integral to show that $$\prob{T_\sigma<T_\mu} = \frac{\sigma}{\sigma+\mu}.$$**
+
+## Chains of compartments
+
+We can link the basic motifs studied above into complicated diagrams, wherein individuals enter one box upon leaving another.
+For example, the following diagram caricatures a permanently immunizing infection with a latent period.
+
+```{r comp3,fig.height=1,fig.width=4}
+pushViewport(viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc")))
+pushViewport(viewport(x=1/4,y=1,just=c(1,1),width=unit(1/4,"npc"),height=unit(1,"npc")))
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.75))
+grid.rect(x=c(1/4),y=c(1/2),width=1/2,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/4),y=c(1/2),label=expression(S),gp=gpar(fontsize=18))
+grid.lines(x=c(1/2,1),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=3/4,y=unit(1/2,"npc")+unit(8,"point"),label=c(expression(lambda)),gp=gpar(fontsize=16))
+popViewport()
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.25))
+grid.lines(x=1/4,y=c(1,0),arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=unit(1/4,"npc")+unit(8,"point"),y=unit(1/2,"npc"),label=c(expression(mu)),gp=gpar(fontsize=16))
+popViewport()
+popViewport()
+pushViewport(viewport(x=2/4,y=1,just=c(1,1),width=unit(1/4,"npc"),height=unit(1,"npc")))
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.75))
+grid.rect(x=c(1/4),y=c(1/2),width=1/2,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/4),y=c(1/2),label=expression(E),gp=gpar(fontsize=18))
+grid.lines(x=c(1/2,1),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=3/4,y=unit(1/2,"npc")+unit(8,"point"),label=c(expression(sigma)),gp=gpar(fontsize=16))
+popViewport()
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.25))
+grid.lines(x=1/4,y=c(1,0),arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=unit(1/4,"npc")+unit(8,"point"),y=unit(1/2,"npc"),label=c(expression(mu)),gp=gpar(fontsize=16))
+popViewport()
+popViewport()
+pushViewport(viewport(x=3/4,y=1,just=c(1,1),width=unit(1/4,"npc"),height=unit(1,"npc")))
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.75))
+grid.rect(x=c(1/4),y=c(1/2),width=1/2,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/4),y=c(1/2),label=expression(I),gp=gpar(fontsize=18))
+grid.lines(x=c(1/2,1),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=3/4,y=unit(1/2,"npc")+unit(8,"point"),label=c(expression(gamma)),gp=gpar(fontsize=16))
+popViewport()
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.25))
+grid.lines(x=1/4,y=c(1,0),arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=unit(1/4,"npc")+unit(8,"point"),y=unit(1/2,"npc"),label=c(expression(mu)),gp=gpar(fontsize=16))
+popViewport()
+popViewport()
+pushViewport(viewport(x=4/4,y=1,just=c(1,1),width=unit(1/4,"npc"),height=unit(1,"npc")))
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.75))
+grid.rect(x=c(1/4),y=c(1/2),width=1/2,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/4),y=c(1/2),label=expression(R),gp=gpar(fontsize=18))
+popViewport()
+pushViewport(viewport(width=1,height=0.5,x=0.5,y=0.25))
+grid.lines(x=1/4,y=c(1,0),arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.text(x=unit(1/4,"npc")+unit(8,"point"),y=unit(1/2,"npc"),label=c(expression(mu)),gp=gpar(fontsize=16))
+popViewport()
+popViewport()
+popViewport()
+```
+
+What is the chance that an individual host is in the latent class, given that it was infected $T$ units of time ago?
+In other words, what is $\prob{T<T_E}$, where $T_E$ is the residence time of the E compartment?
+
+**Show that $\prob{T<T_E}=e^{-(\sigma+\mu)\,T}$.**
+
+What is the probability that an individual host, infected $T$ units of time ago, is infectious?
+To work this out, we need to account for all the possible ways this host could have come from S to I, including the amount of time spent in E and allowing for the possibility of death while still in E.
+
+**Show that the probability a host is in the I box given that it spent $t<T$ units of time in the E compartment is**
+$$e^{-(\gamma+\mu)\,(T-t)}\,\left(\frac{\sigma}{\sigma+\mu}\right)\,(\sigma+\mu)\,e^{-(\sigma+\mu)\,t}\,\dd{t}$$
+
+We can sum this expression over all possible values of $t$ to obtain the desired probability:
+$$\int_{0}^{T}\!\sigma\,e^{-(\sigma+\mu)\,t}\,e^{-(\gamma+\mu)\,(T-t)}\,\dd{t}.$$
+
+**Evaluate this integral and show that it agrees with Eq.&nbsp;3.12 in Keeling \& Rohani.**
+
+**What happens when $\sigma=\gamma$?**
