@@ -66,7 +66,7 @@ How is it distributed?
 
 To answer this, we'll derive an equation for, $\prob{T\le t}$, the cumulative distribution function for $T$.
 First, notice that
-$$\begin{aligned}\prob{T\le t+\dlta{t}} &= \prob{T\le t} + \prob{T > t\;\&\;T\le t+\dlta{t}}\\ &= \prob{T\le t} + \prob{T > t}\,\prob{T\le t+\dlta{t}\;\vert\;T > t}.\end{aligned}$$
+$$\begin{aligned}\prob{T\le t+\dlta{t}} &= \prob{T\le t} + \prob{t<T\le t+\dlta{t}}\\ &= \prob{T\le t} + \prob{T\le t+\dlta{t}\;\vert\;T > t}\,\prob{T > t}.\end{aligned}$$
 
 **Why?**
 
