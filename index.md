@@ -25,6 +25,9 @@
 1. For 27 October:
 	a. Reading: K&R 3.3--3.5.
 	a. Homework: [HW2](./hw2.pdf)
+1. For 3 November:
+	a. Reading: K&R 4.1.1--4.1.3.
+	a. Homework: [HW3](./hw3.pdf)
 
 ##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)
 

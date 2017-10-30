@@ -1,0 +1,42 @@
+---
+title: "Theory of Infectious Disease"
+subtitle: Homework 3
+author: "Aaron A. King"
+output:
+  pdf_document: default
+params:
+  prefix: "hw3"
+---
+
+\newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+\newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+\newcommand{\dd}[1]{\mathrm{d}{#1}}
+\newcommand{\pd}[2]{\frac{\partial{#1}}{\partial{#2}}}
+\newcommand{\deriv}[2]{\frac{\dd{#1}}{\dd{#2}}}
+\newcommand\E[1]{\expect{#1}}
+\newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+\newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+\newcommand\dlta[1]{{\Delta}{#1}}
+\newcommand\lik{\mathcal{L}}
+\newcommand\loglik{\ell}
+\newcommand\equals{{=\,}}
+\newcommand\R{\mathbb{R}}
+\newcommand\data[1]{#1^*}
+\newcommand\params{\, ; \,}
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = FALSE, cache=TRUE,
+    fig.align="center",
+    cache.path=paste0("cache/",params$prefix),
+    fig.path=paste0("figure/",params$prefix))
+library(ggplot2)
+library(reshape2)
+library(plyr)
+library(grid)
+```
+
+Using **R** and **deSolve**, implement the SARS model (Keeling \& Rohani, Eqs.&nbsp;3.19).
+Use your implementation to reproduce Keeling \& Rohani Fig.&nbsp;3.14.
+
