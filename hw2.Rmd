@@ -217,8 +217,13 @@ To work this out, we need to account for all the possible ways this host could h
 
 **Show that the probability a host is in the I box given that it spent $s<t$ units of time in the E compartment is**
 $$e^{-(\gamma+\mu)\,(t-s)}\,\left(\frac{\sigma}{\sigma+\mu}\right)\,(\sigma+\mu)\,e^{-(\sigma+\mu)\,s}\,\dd{s}$$
+**Accomplish this in three steps:**
 
-We can sum this expression over all possible values of $s$ to obtain the desired probability:
+1. Show that the probability the host spent between $s$ and $s+\dd{s}$ units of time in the E box is $$(\sigma+\mu)\,e^{-(\sigma+\mu)\,s}\,\dd{s}.$$
+1. Recall that the probability the host went into the I box after leaving the E box is $\sigma/(\sigma+\mu)$.
+1. Show that the probability the host has not yet left the I box is $e^{-(\gamma+\mu)\,(t-s)}$.
+
+Now we can sum the above expression over all possible values of $s$ to obtain the desired probability:
 $$\int_{0}^{t}\!\sigma\,e^{-(\sigma+\mu)\,s}\,e^{-(\gamma+\mu)\,(t-s)}\,\dd{s}.$$
 
 **Evaluate this integral and show that it agrees with Eq.&nbsp;3.12 in Keeling \& Rohani.**
