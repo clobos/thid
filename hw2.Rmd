@@ -207,19 +207,19 @@ popViewport()
 popViewport()
 ```
 
-What is the chance that an individual host is in the latent class, given that it was infected $T$ units of time ago?
-In other words, what is $\prob{T<T_E}$, where $T_E$ is the residence time of the E compartment?
+What is the chance that an individual host is in the latent class, given that it was infected $t$ units of time ago?
+In other words, what is $\prob{T_E>t}$, where $T_E$ is the residence time of the E compartment?
 
-**Show that $\prob{T<T_E}=e^{-(\sigma+\mu)\,T}$.**
+**Show that $\prob{t<T_E}=e^{-(\sigma+\mu)\,t}$.**
 
-What is the probability that an individual host, infected $T$ units of time ago, is infectious?
+What is the probability that an individual host, infected $t$ units of time ago, is infectious?
 To work this out, we need to account for all the possible ways this host could have come from S to I, including the amount of time spent in E and allowing for the possibility of death while still in E.
 
-**Show that the probability a host is in the I box given that it spent $t<T$ units of time in the E compartment is**
-$$e^{-(\gamma+\mu)\,(T-t)}\,\left(\frac{\sigma}{\sigma+\mu}\right)\,(\sigma+\mu)\,e^{-(\sigma+\mu)\,t}\,\dd{t}$$
+**Show that the probability a host is in the I box given that it spent $s<t$ units of time in the E compartment is**
+$$e^{-(\gamma+\mu)\,(t-s)}\,\left(\frac{\sigma}{\sigma+\mu}\right)\,(\sigma+\mu)\,e^{-(\sigma+\mu)\,s}\,\dd{s}$$
 
-We can sum this expression over all possible values of $t$ to obtain the desired probability:
-$$\int_{0}^{T}\!\sigma\,e^{-(\sigma+\mu)\,t}\,e^{-(\gamma+\mu)\,(T-t)}\,\dd{t}.$$
+We can sum this expression over all possible values of $s$ to obtain the desired probability:
+$$\int_{0}^{t}\!\sigma\,e^{-(\sigma+\mu)\,s}\,e^{-(\gamma+\mu)\,(t-s)}\,\dd{s}.$$
 
 **Evaluate this integral and show that it agrees with Eq.&nbsp;3.12 in Keeling \& Rohani.**
 
