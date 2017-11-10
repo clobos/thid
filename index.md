@@ -30,6 +30,8 @@
 	a. Homework: [HW3](./hw3.pdf)
 1. For 10 November:
 	a. Reading: K&R 4.2.
+1. For 17 November:
+	a. Reading: K&R 4.1--4.2.
 
 ##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)
 
