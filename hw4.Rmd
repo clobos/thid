@@ -1,11 +1,11 @@
 ---
 title: "Theory of Infectious Disease"
-subtitle: Homework 3
+subtitle: Homework 4
 author: "Aaron A. King"
 output:
   pdf_document: default
 params:
-  prefix: "hw3"
+  prefix: "hw4"
 ---
 
 \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
@@ -37,8 +37,19 @@ library(plyr)
 library(grid)
 ```
 
-### SARS model
+### Dynamics of vector-borne disease
 
-Using **R** and **deSolve**, implement the SARS model (Keeling \& Rohani, Eqs.&nbsp;3.19).
-Use your implementation to reproduce Keeling \& Rohani Fig.&nbsp;3.14.
+Using **R** and **deSolve**, implement a numerical solver of the vector-borne disease model described in Keeling \& Rohani Eqs. 4.16.
+Using the top two panels of Fig. 4.13 as a guide, come up with reasonable values for the model parameters and explore the model's dynamics.
 
+### Fast-slow reduction
+
+Next, implement the fast-slow reduction of the model.
+This is captured in the second pair of displayed differential equations in Box 4.2.
+Use **R** and **deSolve** to solve these equations, using the same parameters as before.
+How are the dynamics of the two models related?
+
+### Seasonal forcing in SIR dynamics
+
+Use numerical solutions to explore the dynamics of the seasonally-forced SIR model expressed in Eqs. 5.2--5.4.
+Use Fig. 5.6 as a guide.

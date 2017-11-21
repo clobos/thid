@@ -32,6 +32,9 @@
 	a. Reading: K&R 4.2.
 1. For 17 November:
 	a. Reading: K&R 4.1--4.2.
+1. For 1 December:
+	a. Reading: K&R 5.1.
+	a. Homework: [HW4](./hw4.pdf)
 
 ##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)
 
