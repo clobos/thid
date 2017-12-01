@@ -35,6 +35,8 @@
 1. For 1 December:
 	a. Reading: K&R 5.1.
 	a. Homework: [HW4](./hw4.pdf)
+1. For 8 December:
+	a. Reading: K&R 5.2.
 
 ##### **Site source codes:** [Linked here.](https://github.com/kingaa/thid/)
 
